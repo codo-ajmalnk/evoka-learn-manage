@@ -7,6 +7,11 @@ import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
+import Tutors from "./pages/Tutors";
+import Executives from "./pages/Executives";
+import Managers from "./pages/Managers";
+import HR from "./pages/HR";
+import Assignments from "./pages/Assignments";
 import DashboardLayout from "./components/Layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -23,6 +28,11 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
           <Route path="/students" element={<DashboardLayout><Students /></DashboardLayout>} />
+          <Route path="/tutors" element={<DashboardLayout><Tutors /></DashboardLayout>} />
+          <Route path="/executives" element={<DashboardLayout><Executives /></DashboardLayout>} />
+          <Route path="/managers" element={<DashboardLayout><Managers /></DashboardLayout>} />
+          <Route path="/hr" element={<DashboardLayout><HR /></DashboardLayout>} />
+          <Route path="/assignments" element={<DashboardLayout><Assignments /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
