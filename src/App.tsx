@@ -12,6 +12,12 @@ import Executives from "./pages/Executives";
 import Managers from "./pages/Managers";
 import HR from "./pages/HR";
 import Assignments from "./pages/Assignments";
+import Journals from "./pages/Journals";
+import Attendance from "./pages/Attendance";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+import Notifications from "./pages/Notifications";
 import DashboardLayout from "./components/Layout/DashboardLayout";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +39,12 @@ const App = () => (
           <Route path="/managers" element={<DashboardLayout><Managers /></DashboardLayout>} />
           <Route path="/hr" element={<DashboardLayout><HR /></DashboardLayout>} />
           <Route path="/assignments" element={<DashboardLayout><Assignments /></DashboardLayout>} />
+          <Route path="/journals" element={<DashboardLayout><Journals /></DashboardLayout>} />
+          <Route path="/attendance" element={<DashboardLayout><Attendance /></DashboardLayout>} />
+          <Route path="/reports" element={<DashboardLayout><Reports /></DashboardLayout>} />
+          <Route path="/settings" element={<DashboardLayout><Settings /></DashboardLayout>} />
+          <Route path="/profile" element={<DashboardLayout><Profile /></DashboardLayout>} />
+          <Route path="/notifications" element={<DashboardLayout><Notifications /></DashboardLayout>} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

@@ -40,7 +40,6 @@ const getMenuItems = (role: string) => {
 
   const roleSpecificItems: Record<string, any[]> = {
     admin: [
-      { title: "Users", url: "/users", icon: Users },
       { title: "Students", url: "/students", icon: GraduationCap },
       { title: "Tutors", url: "/tutors", icon: User },
       { title: "Executives", url: "/executives", icon: Briefcase },
