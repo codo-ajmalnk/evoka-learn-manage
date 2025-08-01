@@ -152,19 +152,19 @@ const Dashboard = () => {
             <CardTitle>Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="outline" onClick={() => window.location.href = '/students'}>
               <Plus className="h-4 w-4 mr-2" />
               Add Student
             </Button>
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="outline" onClick={() => window.location.href = '/tutors'}>
               <Plus className="h-4 w-4 mr-2" />
               Add Tutor
             </Button>
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="outline" onClick={() => window.location.href = '/attendance'}>
               <Calendar className="h-4 w-4 mr-2" />
               View Attendance
             </Button>
-            <Button className="w-full" variant="outline">
+            <Button className="w-full" variant="outline" onClick={() => window.location.href = '/assignments'}>
               <BookOpen className="h-4 w-4 mr-2" />
               Manage Assignments
             </Button>

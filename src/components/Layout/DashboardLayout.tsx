@@ -3,6 +3,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Button } from "@/components/ui/button";
 import { Bell, LogOut, User, Search } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 import { Input } from "@/components/ui/input";
 import { 
   DropdownMenu, 
@@ -61,8 +62,15 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
               </div>
 
               <div className="flex items-center gap-4">
+                <ThemeToggle />
+                
                 {/* Notifications */}
-                <Button variant="ghost" size="icon" className="relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="relative"
+                  onClick={() => navigate('/notifications')}
+                >
                   <Bell className="h-5 w-5" />
                   {notifications > 0 && (
                     <Badge 
@@ -93,11 +101,11 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                   <DropdownMenuContent align="end" className="w-56">
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
                       <User className="mr-2 h-4 w-4" />
                       Profile
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate('/notifications')}>
                       <Bell className="mr-2 h-4 w-4" />
                       Notifications
                     </DropdownMenuItem>

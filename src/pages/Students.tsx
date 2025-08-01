@@ -16,10 +16,13 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, 
@@ -360,10 +363,63 @@ const Students = () => {
           <h1 className="text-3xl font-bold">Students</h1>
           <p className="text-muted-foreground">Manage student information and records</p>
         </div>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Student
-        </Button>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="gap-2">
+              <Plus className="h-4 w-4" />
+              Add Student
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle>Add New Student</DialogTitle>
+              <DialogDescription>Create a new student profile</DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div>
+                <Label htmlFor="firstName">First Name</Label>
+                <Input id="firstName" placeholder="Enter first name" />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input id="lastName" placeholder="Enter last name" />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" placeholder="Enter email" />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input id="phone" placeholder="Enter phone number" />
+              </div>
+              <div className="col-span-2">
+                <Label htmlFor="address">Address</Label>
+                <Input id="address" placeholder="Enter address" />
+              </div>
+              <div>
+                <Label htmlFor="dob">Date of Birth</Label>
+                <Input id="dob" type="date" />
+              </div>
+              <div>
+                <Label htmlFor="gender">Gender</Label>
+                <Select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline">Cancel</Button>
+              <Button>Create Student</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>
