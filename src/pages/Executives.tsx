@@ -179,6 +179,13 @@ const Executives = () => {
     return matchesSearch;
   });
 
+  const handleEdit = (executive: Executive) => {
+    toast({
+      title: "Edit Executive",
+      description: `Editing ${executive.firstName} ${executive.lastName}`,
+    });
+  };
+
   const handleDelete = (id: string) => {
     setExecutives(executives.filter(executive => executive.id !== id));
     toast({
@@ -390,7 +397,10 @@ const Executives = () => {
           <p className="text-muted-foreground">Manage executive profiles and information</p>
         </div>
         {(userRole === "admin" || userRole === "hr" || userRole === "manager") && (
-          <Button className="flex items-center gap-2">
+          <Button className="flex items-center gap-2" onClick={() => toast({
+            title: "Add New Executive",
+            description: "Opening add new executive dialog",
+          })}>
             <Plus className="h-4 w-4" />
             Add New Executive
           </Button>
@@ -552,7 +562,7 @@ const Executives = () => {
                           </DialogTrigger>
                           {selectedExecutive && <ExecutiveDetailsDialog executive={selectedExecutive} />}
                         </Dialog>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(executive)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         {(userRole === "admin" || userRole === "hr" || userRole === "manager") && (

@@ -180,6 +180,13 @@ const HR = () => {
     return matchesSearch;
   });
 
+  const handleEdit = (hr: HRPerson) => {
+    toast({
+      title: "Edit HR Personnel",
+      description: `Editing ${hr.firstName} ${hr.lastName}`,
+    });
+  };
+
   const handleDelete = (id: string) => {
     setHRPersons(hrPersons.filter(hr => hr.id !== id));
     toast({
@@ -558,7 +565,7 @@ const HR = () => {
                           </DialogTrigger>
                           {selectedHR && <HRDetailsDialog hr={selectedHR} />}
                         </Dialog>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(hr)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         {userRole === "admin" && (

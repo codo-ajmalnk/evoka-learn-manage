@@ -183,6 +183,13 @@ const Managers = () => {
     return matchesSearch;
   });
 
+  const handleEdit = (manager: Manager) => {
+    toast({
+      title: "Edit Manager",
+      description: `Editing ${manager.firstName} ${manager.lastName}`,
+    });
+  };
+
   const handleDelete = (id: string) => {
     setManagers(managers.filter(manager => manager.id !== id));
     toast({
@@ -566,7 +573,7 @@ const Managers = () => {
                           </DialogTrigger>
                           {selectedManager && <ManagerDetailsDialog manager={selectedManager} />}
                         </Dialog>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(manager)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(manager.id)}>

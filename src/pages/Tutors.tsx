@@ -180,6 +180,13 @@ const Tutors = () => {
     return matchesSearch;
   });
 
+  const handleEdit = (tutor: Tutor) => {
+    toast({
+      title: "Edit Tutor",
+      description: `Editing ${tutor.firstName} ${tutor.lastName}`,
+    });
+  };
+
   const handleDelete = (id: string) => {
     setTutors(tutors.filter(tutor => tutor.id !== id));
     toast({
@@ -390,7 +397,10 @@ const Tutors = () => {
           <h1 className="text-3xl font-bold">Tutors Management</h1>
           <p className="text-muted-foreground">Manage tutor profiles and information</p>
         </div>
-        <Button className="flex items-center gap-2">
+        <Button className="flex items-center gap-2" onClick={() => toast({
+          title: "Add New Tutor",
+          description: "Opening add new tutor dialog",
+        })}>
           <Plus className="h-4 w-4" />
           Add New Tutor
         </Button>
@@ -567,7 +577,7 @@ const Tutors = () => {
                           </DialogTrigger>
                           {selectedTutor && <TutorDetailsDialog tutor={selectedTutor} />}
                         </Dialog>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(tutor)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => handleDelete(tutor.id)}>

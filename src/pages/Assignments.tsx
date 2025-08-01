@@ -170,6 +170,13 @@ const Assignments = () => {
     return matchesSearch;
   });
 
+  const handleEdit = (assignment: Assignment) => {
+    toast({
+      title: "Edit Assignment",
+      description: `Editing assignment: ${assignment.title}`,
+    });
+  };
+
   const handleDelete = (id: string) => {
     setAssignments(assignments.filter(assignment => assignment.id !== id));
     toast({
@@ -670,7 +677,7 @@ const Assignments = () => {
                           </DialogTrigger>
                           {selectedAssignment && <AssignmentDetailsDialog assignment={selectedAssignment} />}
                         </Dialog>
-                        <Button variant="ghost" size="sm">
+                        <Button variant="ghost" size="sm" onClick={() => handleEdit(assignment)}>
                           <Edit className="h-4 w-4" />
                         </Button>
                         {(userRole === "admin" || userRole === "tutor") && (

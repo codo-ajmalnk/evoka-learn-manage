@@ -40,6 +40,7 @@ import {
   BookOpen,
   Clock
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 // Dummy student data
 const dummyStudents = [
@@ -125,6 +126,7 @@ const Students = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const { toast } = useToast();
 
   const filteredStudents = students.filter(student => {
     const matchesSearch = `${student.firstName} ${student.lastName} ${student.email} ${student.id}`
@@ -138,10 +140,25 @@ const Students = () => {
     return matchesSearch && matchesTab;
   });
 
+  const handleEdit = (student: any) => {
+    toast({
+      title: "Edit Student",
+      description: `Editing ${student.firstName} ${student.lastName}`,
+    });
+  };
+
+  const handleDelete = (id: string) => {
+    setStudents(students.filter(student => student.id !== id));
+    toast({
+      title: "Student Deleted",
+      description: "Student has been successfully deleted.",
+    });
+  };
+
   const StudentDetailsDialog = ({ student }: { student: any }) => (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="sm" onClick={() => setSelectedStudent(student)}>
+        <Button variant="ghost" size="sm">
           <Eye className="h-4 w-4" />
         </Button>
       </DialogTrigger>
@@ -358,7 +375,7 @@ const Students = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Students</h1>
           <p className="text-muted-foreground">Manage student information and records</p>
@@ -424,19 +441,19 @@ const Students = () => {
 
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <CardTitle>Student List</CardTitle>
               <CardDescription>View and manage all students</CardDescription>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search students..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-64"
+                  className="pl-10 w-full sm:w-64"
                 />
               </div>
               <Button variant="outline" size="sm">
@@ -460,10 +477,11 @@ const Students = () => {
         </CardHeader>
         
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
                 <TableHead>ID</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Batch</TableHead>
@@ -518,21 +536,27 @@ const Students = () => {
                       {student.status}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <StudentDetailsDialog student={student} />
-                      <Button variant="ghost" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                   <TableCell>
+                     <div className="flex items-center gap-1">
+                       <StudentDetailsDialog student={student} />
+                       <Button variant="ghost" size="sm" onClick={() => handleEdit(student)}>
+                         <Edit className="h-4 w-4" />
+                       </Button>
+                       <Button 
+                         variant="ghost" 
+                         size="sm" 
+                         onClick={() => handleDelete(student.id)}
+                         className="text-destructive hover:text-destructive"
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
+                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+           </Table>
+          </div>
           
           {filteredStudents.length === 0 && (
             <div className="text-center py-8">
