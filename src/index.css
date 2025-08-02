@@ -129,3 +129,250 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom Scrollbar Styles */
+@layer utilities {
+  /* Webkit browsers (Chrome, Safari, Edge) */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: var(--radius);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: var(--radius);
+    transition: var(--transition-smooth);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.7);
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: hsl(var(--muted));
+  }
+
+  /* Apply to all scrollable elements globally */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--border)) hsl(var(--muted));
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: var(--radius);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: var(--radius);
+    transition: var(--transition-smooth);
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--primary) / 0.7);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: hsl(var(--muted));
+  }
+}
+
+/* Custom Calendar Styles */
+@layer components {
+  .rdp {
+    --rdp-cell-size: 40px;
+    --rdp-accent-color: hsl(var(--primary));
+    --rdp-background-color: hsl(var(--background));
+    --rdp-accent-color-dark: hsl(var(--primary-hover));
+    --rdp-background-color-dark: hsl(var(--background));
+    --rdp-outline: 2px solid hsl(var(--ring));
+    --rdp-outline-selected: 2px solid hsl(var(--primary));
+    margin: 0;
+  }
+
+  .rdp-months {
+    @apply flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0;
+  }
+
+  .rdp-month {
+    @apply space-y-4;
+  }
+
+  .rdp-caption {
+    @apply flex justify-center pt-1 relative items-center font-medium text-foreground;
+  }
+
+  .rdp-nav {
+    @apply space-x-1 flex items-center;
+  }
+
+  .rdp-nav_button {
+    @apply h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 border border-border rounded-md hover:bg-accent transition-colors;
+  }
+
+  .rdp-nav_button_previous {
+    @apply absolute left-1;
+  }
+
+  .rdp-nav_button_next {
+    @apply absolute right-1;
+  }
+
+  .rdp-table {
+    @apply w-full border-collapse space-y-1;
+  }
+
+  .rdp-head_row {
+    @apply flex;
+  }
+
+  .rdp-head_cell {
+    @apply text-muted-foreground rounded-md w-9 font-normal text-[0.8rem];
+  }
+
+  .rdp-row {
+    @apply flex w-full mt-2;
+  }
+
+  .rdp-cell {
+    @apply h-9 w-9 text-center text-sm p-0 relative rounded-md hover:bg-accent focus-within:relative focus-within:z-20;
+  }
+
+  .rdp-button {
+    @apply h-9 w-9 p-0 font-normal rounded-md hover:bg-accent transition-colors border-0 bg-transparent;
+  }
+
+  .rdp-day_selected {
+    @apply bg-primary text-primary-foreground hover:bg-primary-hover;
+  }
+
+  .rdp-day_today {
+    @apply bg-accent text-accent-foreground font-semibold;
+  }
+
+  .rdp-day_outside {
+    @apply text-muted-foreground opacity-50;
+  }
+
+  .rdp-day_disabled {
+    @apply text-muted-foreground opacity-50 cursor-not-allowed;
+  }
+
+  .rdp-day_range_middle {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .rdp-day_hidden {
+    @apply invisible;
+  }
+}
+
+/* Custom Dropdown Styles */
+@layer components {
+  /* Dropdown Menu Content */
+  [data-radix-popper-content-wrapper] {
+    z-index: 50 !important;
+  }
+
+  .dropdown-content {
+    @apply min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover p-1 text-popover-foreground shadow-md;
+    z-index: 50;
+    animation: slideIn 0.15s ease-out;
+  }
+
+  .dropdown-item {
+    @apply relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+  }
+
+  .dropdown-separator {
+    @apply -mx-1 my-1 h-px bg-border;
+  }
+
+  .dropdown-label {
+    @apply px-2 py-1.5 text-sm font-semibold text-foreground;
+  }
+
+  .dropdown-shortcut {
+    @apply ml-auto text-xs tracking-widest text-muted-foreground;
+  }
+
+  /* Select Dropdown Trigger */
+  .select-trigger {
+    @apply flex h-10 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .select-content {
+    @apply relative z-50 max-h-96 min-w-[8rem] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md;
+    animation: slideIn 0.15s ease-out;
+  }
+
+  .select-item {
+    @apply relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+  }
+
+  .select-item-indicator {
+    @apply absolute left-2 flex h-3.5 w-3.5 items-center justify-center;
+  }
+
+  /* Animation keyframes */
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Popover styles */
+  .popover-content {
+    @apply z-50 w-72 rounded-md border border-border bg-popover p-4 text-popover-foreground shadow-md outline-none;
+    animation: slideIn 0.15s ease-out;
+  }
+
+  /* Command palette styles */
+  .command-content {
+    @apply overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md;
+  }
+
+  .command-input {
+    @apply flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50 border-0 focus:ring-0;
+  }
+
+  .command-list {
+    @apply max-h-[300px] overflow-y-auto overflow-x-hidden;
+  }
+
+  .command-item {
+    @apply relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50;
+  }
+
+  .command-empty {
+    @apply py-6 text-center text-sm text-muted-foreground;
+  }
+
+  .command-group {
+    @apply overflow-hidden p-1 text-foreground;
+  }
+
+  .command-separator {
+    @apply -mx-1 h-px bg-border;
+  }
+
+  .command-shortcut {
+    @apply ml-auto text-xs tracking-widest text-muted-foreground;
+  }
+}
