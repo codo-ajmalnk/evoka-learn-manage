@@ -46,36 +46,36 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
         
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Header */}
-          <header className="h-14 sm:h-16 border-b border-border/30 bg-card/80 backdrop-blur-xl sticky top-0 z-20 shadow-lg">
-            <div className="flex items-center justify-between h-full px-3 sm:px-6">
-              <div className="flex items-center gap-2 sm:gap-4">
+          <header className="h-16 border-b border-border/30 bg-card/80 backdrop-blur-xl sticky top-0 z-20 shadow-lg">
+            <div className="flex items-center justify-between h-full px-4 lg:px-6">
+              <div className="flex items-center gap-4">
                 <SidebarTrigger className="hover:bg-accent/80 hover:scale-105 transition-all duration-200 rounded-lg p-2" />
                 
                 {/* Search Bar */}
-                <div className="relative w-full max-w-xs sm:max-w-sm hidden sm:block">
+                <div className="relative w-full max-w-md hidden md:block">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search students, tutors, etc..."
-                    className="pl-10 bg-background/60 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 rounded-xl text-sm"
+                    className="pl-10 w-80 bg-background/60 backdrop-blur-sm border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all duration-200 rounded-xl text-sm"
                   />
                 </div>
               </div>
 
-              <div className="flex items-center gap-1 sm:gap-3">
+              <div className="flex items-center gap-3">
                 <ThemeToggle />
                 
                 {/* Notifications */}
                 <Button 
                   variant="ghost" 
                   size="icon" 
-                  className="relative hover:bg-accent/80 hover:scale-105 transition-all duration-200 rounded-xl h-8 w-8 sm:h-10 sm:w-10"
+                  className="relative hover:bg-accent/80 hover:scale-105 transition-all duration-200 rounded-xl h-10 w-10"
                   onClick={() => navigate('/notifications')}
                 >
-                  <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <Bell className="h-5 w-5" />
                   {notifications > 0 && (
                     <Badge 
                       variant="destructive" 
-                      className="absolute -top-1 -right-1 h-4 w-4 sm:h-5 sm:w-5 flex items-center justify-center p-0 text-xs animate-pulse shadow-lg"
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs animate-pulse shadow-lg"
                     >
                       {notifications}
                     </Badge>
@@ -85,14 +85,14 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
                 {/* User Menu */}
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="flex items-center gap-2 sm:gap-3 h-auto py-1 px-2 sm:py-2 sm:px-4 rounded-xl hover:bg-accent/80 hover:scale-105 transition-all duration-200 shadow-md">
-                      <Avatar className="h-7 w-7 sm:h-9 sm:w-9 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
+                    <Button variant="ghost" className="flex items-center gap-3 h-auto py-2 px-3 rounded-xl hover:bg-accent/80 hover:scale-105 transition-all duration-200 shadow-md">
+                      <Avatar className="h-9 w-9 ring-2 ring-primary/20 ring-offset-2 ring-offset-background">
                         <AvatarImage src="" />
-                        <AvatarFallback className="bg-gradient-education text-white font-semibold shadow-lg text-xs sm:text-sm">
+                        <AvatarFallback className="bg-gradient-education text-white font-semibold shadow-lg text-sm">
                           {user.name?.charAt(0) || "U"}
                         </AvatarFallback>
                       </Avatar>
-                      <div className="text-left hidden lg:block">
+                      <div className="text-left hidden xl:block">
                         <p className="text-sm font-semibold tracking-wide">{user.name || "User"}</p>
                         <p className="text-xs text-muted-foreground capitalize font-medium">{user.role || "user"}</p>
                       </div>

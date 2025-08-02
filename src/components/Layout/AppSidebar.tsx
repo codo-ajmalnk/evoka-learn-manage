@@ -108,7 +108,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={`${collapsed ? "w-16" : "w-72 lg:w-64 xl:w-72"} transition-all duration-300 ease-in-out border-r border-border/50 shadow-xl bg-gradient-to-br from-sidebar-background via-sidebar-background to-sidebar-accent/20`}
+      className={`${collapsed ? "w-16" : "w-80"} transition-all duration-300 ease-in-out border-r border-border/50 shadow-xl bg-gradient-to-br from-sidebar-background via-sidebar-background to-sidebar-accent/20`}
       collapsible="offcanvas"
     >
       <SidebarContent className="h-full">
