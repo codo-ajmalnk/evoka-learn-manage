@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -386,18 +387,52 @@ const Tutors = () => {
               <Edit className="h-4 w-4 mr-1" />
               Edit
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleDelete(tutor.id)}>
-              <Trash2 className="h-4 w-4 mr-1" />
-              Delete
-            </Button>
-            <Button 
-              variant={tutor.status === "active" ? "destructive" : "success"} 
-              size="sm" 
-              onClick={() => handleStatusToggle(tutor.id)}
-            >
-              <UserX className="h-4 w-4 mr-1" />
-              {tutor.status === "active" ? "Deactivate" : "Activate"}
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Delete
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete the tutor profile and all associated data.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleDelete(tutor.id)}>Delete</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button 
+                  variant={tutor.status === "active" ? "destructive" : "success"} 
+                  size="sm"
+                >
+                  <UserX className="h-4 w-4 mr-1" />
+                  {tutor.status === "active" ? "Deactivate" : "Activate"}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Change Tutor Status</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to {tutor.status === "active" ? "deactivate" : "activate"} this tutor? 
+                    This will affect their access and visibility in the system.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => handleStatusToggle(tutor.id)}>
+                    {tutor.status === "active" ? "Deactivate" : "Activate"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </DialogTitle>
       </DialogHeader>
@@ -414,24 +449,6 @@ const Tutors = () => {
         <TabsContent value="personal" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Personal Information</h3>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "personal")}>
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(tutor.id)}>
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-              <Button 
-                variant={tutor.status === "active" ? "destructive" : "success"} 
-                size="sm" 
-                onClick={() => handleStatusToggle(tutor.id)}
-              >
-                <UserX className="h-4 w-4 mr-1" />
-                {tutor.status === "active" ? "Inactive" : "Active"}
-              </Button>
-            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -468,24 +485,6 @@ const Tutors = () => {
         <TabsContent value="professional" className="space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Professional Information</h3>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "personal")}>
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(tutor.id)}>
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-              <Button 
-                variant={tutor.status === "active" ? "destructive" : "success"} 
-                size="sm" 
-                onClick={() => handleStatusToggle(tutor.id)}
-              >
-                <UserX className="h-4 w-4 mr-1" />
-                {tutor.status === "active" ? "Inactive" : "Active"}
-              </Button>
-            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -540,22 +539,6 @@ const Tutors = () => {
               <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "batch")}>
                 <Plus className="h-4 w-4 mr-1" />
                 Assign Batch
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "batch")}>
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(tutor.id)}>
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-              <Button 
-                variant={tutor.status === "active" ? "destructive" : "success"} 
-                size="sm" 
-                onClick={() => handleStatusToggle(tutor.id)}
-              >
-                <UserX className="h-4 w-4 mr-1" />
-                {tutor.status === "active" ? "Inactive" : "Active"}
               </Button>
             </div>
           </div>
@@ -666,22 +649,6 @@ const Tutors = () => {
                 <Plus className="h-4 w-4 mr-1" />
                 Add Payment
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "payment")}>
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(tutor.id)}>
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-              <Button 
-                variant={tutor.status === "active" ? "destructive" : "success"} 
-                size="sm" 
-                onClick={() => handleStatusToggle(tutor.id)}
-              >
-                <UserX className="h-4 w-4 mr-1" />
-                {tutor.status === "active" ? "Inactive" : "Active"}
-              </Button>
             </div>
           </div>
 
@@ -776,22 +743,6 @@ const Tutors = () => {
               <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "attendance")}>
                 <Plus className="h-4 w-4 mr-1" />
                 Add Record
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "attendance")}>
-                <Edit className="h-4 w-4 mr-1" />
-                Edit
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleDelete(tutor.id)}>
-                <Trash2 className="h-4 w-4 mr-1" />
-                Delete
-              </Button>
-              <Button 
-                variant={tutor.status === "active" ? "destructive" : "success"} 
-                size="sm" 
-                onClick={() => handleStatusToggle(tutor.id)}
-              >
-                <UserX className="h-4 w-4 mr-1" />
-                {tutor.status === "active" ? "Inactive" : "Active"}
               </Button>
             </div>
           </div>
