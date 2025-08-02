@@ -156,13 +156,7 @@ const Students = () => {
   };
 
   const StudentDetailsDialog = ({ student }: { student: any }) => (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Eye className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+    <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>Student Details - {student.firstName} {student.lastName}</DialogTitle>
           <DialogDescription>Student ID: {student.id}</DialogDescription>
@@ -369,8 +363,7 @@ const Students = () => {
             </Card>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
+    </DialogContent>
   );
 
   return (
@@ -538,7 +531,14 @@ const Students = () => {
                   </TableCell>
                    <TableCell>
                      <div className="flex items-center gap-1">
-                       <StudentDetailsDialog student={student} />
+                       <Dialog>
+                         <DialogTrigger asChild>
+                           <Button variant="ghost" size="sm" onClick={() => setSelectedStudent(student)}>
+                             <Eye className="h-4 w-4" />
+                           </Button>
+                         </DialogTrigger>
+                         {selectedStudent && <StudentDetailsDialog student={selectedStudent} />}
+                       </Dialog>
                        <Button variant="ghost" size="sm" onClick={() => handleEdit(student)}>
                          <Edit className="h-4 w-4" />
                        </Button>
