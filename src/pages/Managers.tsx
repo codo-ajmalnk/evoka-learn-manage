@@ -1,14 +1,31 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Edit, Trash2, Plus, Search, Filter, Users, Crown, Calendar, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Calendar,
+  Crown,
+  DollarSign,
+  Edit,
+  Eye,
+  Filter,
+  Plus,
+  Search,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
 
 interface Manager {
   id: string;
@@ -88,29 +105,29 @@ const dummyManagers: Manager[] = [
     accountDetails: {
       bankName: "HDFC Bank",
       accountNumber: "50100987654321",
-      ifsc: "HDFC0001235"
+      ifsc: "HDFC0001235",
     },
     documents: {
       cv: "suresh_cv.pdf",
       pan: "suresh_pan.pdf",
       aadhar: "suresh_aadhar.pdf",
-      passbook: "suresh_passbook.pdf"
+      passbook: "suresh_passbook.pdf",
     },
     attendance: [
-      { month: "November 2024", present: 24, leave: 1 },
-      { month: "October 2024", present: 26, leave: 0 }
+      { month: "November 2025", present: 24, leave: 1 },
+      { month: "October 2025", present: 26, leave: 0 },
     ],
     payments: [
       {
         id: "PAY005",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 85000,
         paid: 85000,
         status: "approved",
-        description: "November salary"
-      }
-    ]
+        description: "November salary",
+      },
+    ],
   },
   {
     id: "MGR002",
@@ -136,29 +153,29 @@ const dummyManagers: Manager[] = [
     accountDetails: {
       bankName: "SBI",
       accountNumber: "30100987654321",
-      ifsc: "SBIN0001235"
+      ifsc: "SBIN0001235",
     },
     documents: {
       cv: "kavitha_cv.pdf",
       pan: "kavitha_pan.pdf",
-      aadhar: "kavitha_aadhar.pdf"
+      aadhar: "kavitha_aadhar.pdf",
     },
     attendance: [
-      { month: "November 2024", present: 25, leave: 0 },
-      { month: "October 2024", present: 24, leave: 2 }
+      { month: "November 2025", present: 25, leave: 0 },
+      { month: "October 2025", present: 24, leave: 2 },
     ],
     payments: [
       {
         id: "PAY006",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 80000,
         paid: 80000,
         status: "approved",
-        description: "November salary"
-      }
-    ]
-  }
+        description: "November salary",
+      },
+    ],
+  },
 ];
 
 const Managers = () => {
@@ -171,15 +188,18 @@ const Managers = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";
 
-  const filteredManagers = managers.filter(manager => {
-    const matchesSearch = `${manager.firstName} ${manager.lastName} ${manager.email} ${manager.id}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    
+  const filteredManagers = managers.filter((manager) => {
+    const matchesSearch =
+      `${manager.firstName} ${manager.lastName} ${manager.email} ${manager.id}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
     if (activeTab === "all") return matchesSearch;
-    if (activeTab === "active") return matchesSearch && manager.status === "active";
-    if (activeTab === "inactive") return matchesSearch && manager.status === "inactive";
-    
+    if (activeTab === "active")
+      return matchesSearch && manager.status === "active";
+    if (activeTab === "inactive")
+      return matchesSearch && manager.status === "inactive";
+
     return matchesSearch;
   });
 
@@ -191,7 +211,7 @@ const Managers = () => {
   };
 
   const handleDelete = (id: string) => {
-    setManagers(managers.filter(manager => manager.id !== id));
+    setManagers(managers.filter((manager) => manager.id !== id));
     toast({
       title: "Manager Deleted",
       description: "Manager has been successfully deleted.",
@@ -204,11 +224,18 @@ const Managers = () => {
         <DialogTitle className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
             <AvatarImage src={manager.photo} />
-            <AvatarFallback>{manager.firstName[0]}{manager.lastName[0]}</AvatarFallback>
+            <AvatarFallback>
+              {manager.firstName[0]}
+              {manager.lastName[0]}
+            </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="text-xl font-semibold">{manager.firstName} {manager.lastName}</h3>
-            <p className="text-sm text-muted-foreground">{manager.id} • {manager.designation}</p>
+            <h3 className="text-xl font-semibold">
+              {manager.firstName} {manager.lastName}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {manager.id} • {manager.designation}
+            </p>
           </div>
         </DialogTitle>
       </DialogHeader>
@@ -249,7 +276,9 @@ const Managers = () => {
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Address</Label>
-              <p className="text-sm">{manager.address}, {manager.pin}</p>
+              <p className="text-sm">
+                {manager.address}, {manager.pin}
+              </p>
             </div>
           </div>
         </TabsContent>
@@ -281,26 +310,37 @@ const Managers = () => {
               <p className="text-sm">{manager.joiningDate}</p>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Account Details</Label>
             <div className="bg-muted p-3 rounded">
-              <p className="text-sm"><strong>Bank:</strong> {manager.accountDetails.bankName}</p>
-              <p className="text-sm"><strong>Account:</strong> {manager.accountDetails.accountNumber}</p>
-              <p className="text-sm"><strong>IFSC:</strong> {manager.accountDetails.ifsc}</p>
+              <p className="text-sm">
+                <strong>Bank:</strong> {manager.accountDetails.bankName}
+              </p>
+              <p className="text-sm">
+                <strong>Account:</strong> {manager.accountDetails.accountNumber}
+              </p>
+              <p className="text-sm">
+                <strong>IFSC:</strong> {manager.accountDetails.ifsc}
+              </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Documents</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {Object.entries(manager.documents).map(([key, value]) => (
-                value && (
-                  <Badge key={key} variant="outline" className="justify-center">
-                    {key.toUpperCase()}
-                  </Badge>
-                )
-              ))}
+              {Object.entries(manager.documents).map(
+                ([key, value]) =>
+                  value && (
+                    <Badge
+                      key={key}
+                      variant="outline"
+                      className="justify-center"
+                    >
+                      {key.toUpperCase()}
+                    </Badge>
+                  )
+              )}
             </div>
           </div>
         </TabsContent>
@@ -310,19 +350,25 @@ const Managers = () => {
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Total Salary</p>
-                <p className="text-lg font-semibold">₹{manager.salary.toLocaleString()}</p>
+                <p className="text-lg font-semibold">
+                  ₹{manager.salary.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Paid</p>
-                <p className="text-lg font-semibold text-success">₹{manager.paidAmount.toLocaleString()}</p>
+                <p className="text-lg font-semibold text-success">
+                  ₹{manager.paidAmount.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Balance</p>
-                <p className="text-lg font-semibold text-warning">₹{(manager.salary - manager.paidAmount).toLocaleString()}</p>
+                <p className="text-lg font-semibold text-warning">
+                  ₹{(manager.salary - manager.paidAmount).toLocaleString()}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -335,12 +381,24 @@ const Managers = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{payment.category}</p>
-                      <p className="text-sm text-muted-foreground">{payment.date}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {payment.date}
+                      </p>
                       <p className="text-sm">{payment.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">₹{payment.amount.toLocaleString()}</p>
-                      <Badge variant={payment.status === "approved" ? "success" : payment.status === "rejected" ? "destructive" : "warning"}>
+                      <p className="font-semibold">
+                        ₹{payment.amount.toLocaleString()}
+                      </p>
+                      <Badge
+                        variant={
+                          payment.status === "approved"
+                            ? "success"
+                            : payment.status === "rejected"
+                            ? "destructive"
+                            : "warning"
+                        }
+                      >
                         {payment.status}
                       </Badge>
                     </div>
@@ -362,8 +420,12 @@ const Managers = () => {
                       <p className="font-medium">{record.month}</p>
                     </div>
                     <div className="flex gap-4 text-sm">
-                      <span className="text-success">Present: {record.present}</span>
-                      <span className="text-warning">Leave: {record.leave}</span>
+                      <span className="text-success">
+                        Present: {record.present}
+                      </span>
+                      <span className="text-warning">
+                        Leave: {record.leave}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -381,7 +443,9 @@ const Managers = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
-          <p className="text-muted-foreground">You don't have permission to view this page.</p>
+          <p className="text-muted-foreground">
+            You don't have permission to view this page.
+          </p>
         </div>
       </div>
     );
@@ -392,7 +456,9 @@ const Managers = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Managers Management</h1>
-          <p className="text-muted-foreground">Manage manager profiles and information</p>
+          <p className="text-muted-foreground">
+            Manage manager profiles and information
+          </p>
         </div>
         <Button className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
@@ -423,7 +489,9 @@ const Managers = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-xl font-semibold">{managers.filter(m => m.status === "active").length}</p>
+                <p className="text-xl font-semibold">
+                  {managers.filter((m) => m.status === "active").length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -437,7 +505,9 @@ const Managers = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Team Size</p>
-                <p className="text-xl font-semibold">{managers.reduce((sum, m) => sum + m.teamSize, 0)}</p>
+                <p className="text-xl font-semibold">
+                  {managers.reduce((sum, m) => sum + m.teamSize, 0)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -479,7 +549,7 @@ const Managers = () => {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <div className="flex gap-2 mb-4">
             <Button
@@ -494,14 +564,15 @@ const Managers = () => {
               size="sm"
               onClick={() => setActiveTab("active")}
             >
-              Active ({managers.filter(m => m.status === "active").length})
+              Active ({managers.filter((m) => m.status === "active").length})
             </Button>
             <Button
               variant={activeTab === "inactive" ? "default" : "outline"}
               size="sm"
               onClick={() => setActiveTab("inactive")}
             >
-              Inactive ({managers.filter(m => m.status === "inactive").length})
+              Inactive ({managers.filter((m) => m.status === "inactive").length}
+              )
             </Button>
           </div>
 
@@ -526,11 +597,18 @@ const Managers = () => {
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage src={manager.photo} />
-                          <AvatarFallback>{manager.firstName[0]}{manager.lastName[0]}</AvatarFallback>
+                          <AvatarFallback>
+                            {manager.firstName[0]}
+                            {manager.lastName[0]}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{manager.firstName} {manager.lastName}</p>
-                          <p className="text-sm text-muted-foreground">{manager.designation}</p>
+                          <p className="font-medium">
+                            {manager.firstName} {manager.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {manager.designation}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -540,7 +618,9 @@ const Managers = () => {
                     <td className="p-2">
                       <div>
                         <p className="text-sm">{manager.phone}</p>
-                        <p className="text-sm text-muted-foreground">{manager.email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {manager.email}
+                        </p>
                       </div>
                     </td>
                     <td className="p-2">
@@ -554,12 +634,18 @@ const Managers = () => {
                     </td>
                     <td className="p-2">
                       <div>
-                        <p className="font-medium">₹{manager.salary.toLocaleString()}</p>
+                        <p className="font-medium">
+                          ₹{manager.salary.toLocaleString()}
+                        </p>
                         <p className="text-xs text-muted-foreground">Monthly</p>
                       </div>
                     </td>
                     <td className="p-2">
-                      <Badge variant={manager.status === "active" ? "success" : "secondary"}>
+                      <Badge
+                        variant={
+                          manager.status === "active" ? "success" : "secondary"
+                        }
+                      >
                         {manager.status}
                       </Badge>
                     </td>
@@ -567,16 +653,30 @@ const Managers = () => {
                       <div className="flex items-center gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedManager(manager)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedManager(manager)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          {selectedManager && <ManagerDetailsDialog manager={selectedManager} />}
+                          {selectedManager && (
+                            <ManagerDetailsDialog manager={selectedManager} />
+                          )}
                         </Dialog>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(manager)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(manager)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(manager.id)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(manager.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -589,7 +689,9 @@ const Managers = () => {
 
           {filteredManagers.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No managers found matching your search.</p>
+              <p className="text-muted-foreground">
+                No managers found matching your search.
+              </p>
             </div>
           )}
         </CardContent>

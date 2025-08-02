@@ -1,19 +1,56 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Eye, Edit, Trash2, Plus, Search, Filter, Users, GraduationCap, Calendar, DollarSign, Upload, Download, UserX, Clock, TrendingUp } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Calendar,
+  Clock,
+  DollarSign,
+  Download,
+  Edit,
+  Eye,
+  Filter,
+  GraduationCap,
+  Plus,
+  Search,
+  Trash2,
+  TrendingUp,
+  Upload,
+  Users,
+  UserX,
+} from "lucide-react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 interface Tutor {
@@ -77,7 +114,7 @@ const availableBatches = [
   { id: "DES001", name: "UI/UX Design Fundamentals", status: "active" },
   { id: "DES002", name: "Graphic Design Pro", status: "active" },
   { id: "DEV001", name: "Full Stack Development", status: "active" },
-  { id: "DEV002", name: "React Advanced", status: "active" }
+  { id: "DEV002", name: "React Advanced", status: "active" },
 ];
 
 const dummyTutors: Tutor[] = [
@@ -105,29 +142,43 @@ const dummyTutors: Tutor[] = [
     accountDetails: {
       bankName: "HDFC Bank",
       accountNumber: "50100123456789",
-      ifsc: "HDFC0001234"
+      ifsc: "HDFC0001234",
     },
     documents: {
       cv: "rajesh_cv.pdf",
       pan: "rajesh_pan.pdf",
-      aadhar: "rajesh_aadhar.pdf"
+      aadhar: "rajesh_aadhar.pdf",
     },
     attendance: [
-      { id: "ATT001", month: "November", year: "2024", present: 22, leave: 3, overtime: 5 },
-      { id: "ATT002", month: "October", year: "2024", present: 24, leave: 2, overtime: 3 }
+      {
+        id: "ATT001",
+        month: "November",
+        year: "2025",
+        present: 22,
+        leave: 3,
+        overtime: 5,
+      },
+      {
+        id: "ATT002",
+        month: "October",
+        year: "2025",
+        present: 24,
+        leave: 2,
+        overtime: 3,
+      },
     ],
     payments: [
       {
         id: "PAY001",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 50000,
         paid: 50000,
         status: "approved",
         description: "November salary",
-        screenshot: "salary_nov.jpg"
-      }
-    ]
+        screenshot: "salary_nov.jpg",
+      },
+    ],
   },
   {
     id: "TUT002",
@@ -152,28 +203,42 @@ const dummyTutors: Tutor[] = [
     accountDetails: {
       bankName: "SBI",
       accountNumber: "30123456789",
-      ifsc: "SBIN0001234"
+      ifsc: "SBIN0001234",
     },
     documents: {
       cv: "priya_cv.pdf",
-      pan: "priya_pan.pdf"
+      pan: "priya_pan.pdf",
     },
     attendance: [
-      { id: "ATT003", month: "November", year: "2024", present: 25, leave: 0, overtime: 2 },
-      { id: "ATT004", month: "October", year: "2024", present: 23, leave: 3, overtime: 0 }
+      {
+        id: "ATT003",
+        month: "November",
+        year: "2025",
+        present: 25,
+        leave: 0,
+        overtime: 2,
+      },
+      {
+        id: "ATT004",
+        month: "October",
+        year: "2025",
+        present: 23,
+        leave: 3,
+        overtime: 0,
+      },
     ],
     payments: [
       {
         id: "PAY002",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 45000,
         paid: 45000,
         status: "approved",
-        description: "November salary"
-      }
-    ]
-  }
+        description: "November salary",
+      },
+    ],
+  },
 ];
 
 const Tutors = () => {
@@ -183,28 +248,33 @@ const Tutors = () => {
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [editingType, setEditingType] = useState<"personal" | "payment" | "attendance" | "batch" | null>(null);
+  const [editingType, setEditingType] = useState<
+    "personal" | "payment" | "attendance" | "batch" | null
+  >(null);
   const { toast } = useToast();
   const form = useForm();
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";
 
-  const filteredTutors = tutors.filter(tutor => {
-    const matchesSearch = `${tutor.firstName} ${tutor.lastName} ${tutor.email} ${tutor.id}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    
+  const filteredTutors = tutors.filter((tutor) => {
+    const matchesSearch =
+      `${tutor.firstName} ${tutor.lastName} ${tutor.email} ${tutor.id}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
     if (activeTab === "all") return matchesSearch;
-    if (activeTab === "active") return matchesSearch && tutor.status === "active";
-    if (activeTab === "inactive") return matchesSearch && tutor.status === "inactive";
-    
+    if (activeTab === "active")
+      return matchesSearch && tutor.status === "active";
+    if (activeTab === "inactive")
+      return matchesSearch && tutor.status === "inactive";
+
     return matchesSearch;
   });
 
   const handleAddTutor = (data: any) => {
     const newTutor: Tutor = {
-      id: `TUT${String(tutors.length + 1).padStart(3, '0')}`,
+      id: `TUT${String(tutors.length + 1).padStart(3, "0")}`,
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
@@ -218,20 +288,20 @@ const Tutors = () => {
       pin: data.pin,
       qualification: data.qualification,
       experience: data.experience,
-      subjects: data.subjects?.split(',') || [],
+      subjects: data.subjects?.split(",") || [],
       batches: [],
       salary: parseInt(data.salary) || 0,
       paidAmount: 0,
       status: "active",
-      joiningDate: new Date().toISOString().split('T')[0],
+      joiningDate: new Date().toISOString().split("T")[0],
       accountDetails: {
         bankName: data.bankName || "",
         accountNumber: data.accountNumber || "",
-        ifsc: data.ifsc || ""
+        ifsc: data.ifsc || "",
       },
       documents: {},
       attendance: [],
-      payments: []
+      payments: [],
     };
 
     setTutors([...tutors, newTutor]);
@@ -242,32 +312,46 @@ const Tutors = () => {
     });
   };
 
-  const handleEdit = (tutor: Tutor, type: "personal" | "payment" | "attendance" | "batch", item?: any) => {
+  const handleEdit = (
+    tutor: Tutor,
+    type: "personal" | "payment" | "attendance" | "batch",
+    item?: any
+  ) => {
     setSelectedTutor(tutor);
     setEditingType(type);
     setEditingItem(item);
   };
 
-  const handleDelete = (tutorId: string, type?: "payment" | "attendance", itemId?: string) => {
+  const handleDelete = (
+    tutorId: string,
+    type?: "payment" | "attendance",
+    itemId?: string
+  ) => {
     if (type && itemId && selectedTutor) {
-      const updatedTutors = tutors.map(tutor => {
+      const updatedTutors = tutors.map((tutor) => {
         if (tutor.id === tutorId) {
           if (type === "payment") {
-            return { ...tutor, payments: tutor.payments.filter(p => p.id !== itemId) };
+            return {
+              ...tutor,
+              payments: tutor.payments.filter((p) => p.id !== itemId),
+            };
           } else if (type === "attendance") {
-            return { ...tutor, attendance: tutor.attendance.filter(a => a.id !== itemId) };
+            return {
+              ...tutor,
+              attendance: tutor.attendance.filter((a) => a.id !== itemId),
+            };
           }
         }
         return tutor;
       });
       setTutors(updatedTutors);
-      setSelectedTutor(updatedTutors.find(t => t.id === tutorId) || null);
+      setSelectedTutor(updatedTutors.find((t) => t.id === tutorId) || null);
       toast({
         title: `${type} Deleted`,
         description: `${type} record has been deleted successfully.`,
       });
     } else {
-      setTutors(tutors.filter(tutor => tutor.id !== tutorId));
+      setTutors(tutors.filter((tutor) => tutor.id !== tutorId));
       toast({
         title: "Tutor Deleted",
         description: "Tutor has been successfully deleted.",
@@ -276,13 +360,19 @@ const Tutors = () => {
   };
 
   const handleStatusToggle = (tutorId: string) => {
-    const updatedTutors = tutors.map(tutor => 
-      tutor.id === tutorId 
-        ? { ...tutor, status: tutor.status === "active" ? "inactive" : "active" as "active" | "inactive" }
+    const updatedTutors = tutors.map((tutor) =>
+      tutor.id === tutorId
+        ? {
+            ...tutor,
+            status:
+              tutor.status === "active"
+                ? "inactive"
+                : ("active" as "active" | "inactive"),
+          }
         : tutor
     );
     setTutors(updatedTutors);
-    const tutor = updatedTutors.find(t => t.id === tutorId);
+    const tutor = updatedTutors.find((t) => t.id === tutorId);
     toast({
       title: "Status Updated",
       description: `Tutor status changed to ${tutor?.status}.`,
@@ -301,23 +391,39 @@ const Tutors = () => {
         <DialogHeader>
           <DialogTitle>Add New Tutor</DialogTitle>
         </DialogHeader>
-        <form onSubmit={form.handleSubmit(handleAddTutor)} className="space-y-4">
+        <form
+          onSubmit={form.handleSubmit(handleAddTutor)}
+          className="space-y-4"
+        >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="firstName">First Name*</Label>
-              <Input {...form.register("firstName", { required: true })} placeholder="Enter first name" />
+              <Input
+                {...form.register("firstName", { required: true })}
+                placeholder="Enter first name"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="lastName">Last Name*</Label>
-              <Input {...form.register("lastName", { required: true })} placeholder="Enter last name" />
+              <Input
+                {...form.register("lastName", { required: true })}
+                placeholder="Enter last name"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email*</Label>
-              <Input {...form.register("email", { required: true })} type="email" placeholder="Enter email" />
+              <Input
+                {...form.register("email", { required: true })}
+                type="email"
+                placeholder="Enter email"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone*</Label>
-              <Input {...form.register("phone", { required: true })} placeholder="Enter phone number" />
+              <Input
+                {...form.register("phone", { required: true })}
+                placeholder="Enter phone number"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="dob">Date of Birth</Label>
@@ -338,27 +444,47 @@ const Tutors = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="qualification">Qualification</Label>
-              <Input {...form.register("qualification")} placeholder="Enter qualification" />
+              <Input
+                {...form.register("qualification")}
+                placeholder="Enter qualification"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="experience">Experience</Label>
-              <Input {...form.register("experience")} placeholder="e.g., 5 years" />
+              <Input
+                {...form.register("experience")}
+                placeholder="e.g., 5 years"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="subjects">Subjects (comma separated)</Label>
-              <Input {...form.register("subjects")} placeholder="e.g., Math, Physics" />
+              <Input
+                {...form.register("subjects")}
+                placeholder="e.g., Math, Physics"
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="salary">Monthly Salary</Label>
-              <Input {...form.register("salary")} type="number" placeholder="Enter salary amount" />
+              <Input
+                {...form.register("salary")}
+                type="number"
+                placeholder="Enter salary amount"
+              />
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label htmlFor="address">Address</Label>
-              <Textarea {...form.register("address")} placeholder="Enter complete address" />
+              <Textarea
+                {...form.register("address")}
+                placeholder="Enter complete address"
+              />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsAddDialogOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit">Add Tutor</Button>
@@ -375,15 +501,24 @@ const Tutors = () => {
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
               <AvatarImage src={tutor.photo} />
-              <AvatarFallback>{tutor.firstName[0]}{tutor.lastName[0]}</AvatarFallback>
+              <AvatarFallback>
+                {tutor.firstName[0]}
+                {tutor.lastName[0]}
+              </AvatarFallback>
             </Avatar>
             <div>
-              <h3 className="text-xl font-semibold">{tutor.firstName} {tutor.lastName}</h3>
+              <h3 className="text-xl font-semibold">
+                {tutor.firstName} {tutor.lastName}
+              </h3>
               <p className="text-sm text-muted-foreground">{tutor.id}</p>
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "personal")}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleEdit(tutor, "personal")}
+            >
               <Edit className="h-4 w-4 mr-1" />
               Edit
             </Button>
@@ -398,19 +533,24 @@ const Tutors = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the tutor profile and all associated data.
+                    This action cannot be undone. This will permanently delete
+                    the tutor profile and all associated data.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleDelete(tutor.id)}>Delete</AlertDialogAction>
+                  <AlertDialogAction onClick={() => handleDelete(tutor.id)}>
+                    Delete
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button 
-                  variant={tutor.status === "active" ? "destructive" : "success"} 
+                <Button
+                  variant={
+                    tutor.status === "active" ? "destructive" : "success"
+                  }
                   size="sm"
                 >
                   <UserX className="h-4 w-4 mr-1" />
@@ -421,13 +561,17 @@ const Tutors = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Change Tutor Status</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Are you sure you want to {tutor.status === "active" ? "deactivate" : "activate"} this tutor? 
-                    This will affect their access and visibility in the system.
+                    Are you sure you want to{" "}
+                    {tutor.status === "active" ? "deactivate" : "activate"} this
+                    tutor? This will affect their access and visibility in the
+                    system.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => handleStatusToggle(tutor.id)}>
+                  <AlertDialogAction
+                    onClick={() => handleStatusToggle(tutor.id)}
+                  >
                     {tutor.status === "active" ? "Deactivate" : "Activate"}
                   </AlertDialogAction>
                 </AlertDialogFooter>
@@ -477,7 +621,9 @@ const Tutors = () => {
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Address</Label>
-              <p className="text-sm">{tutor.address}, {tutor.pin}</p>
+              <p className="text-sm">
+                {tutor.address}, {tutor.pin}
+              </p>
             </div>
           </div>
         </TabsContent>
@@ -499,7 +645,9 @@ const Tutors = () => {
               <Label>Subjects</Label>
               <div className="flex flex-wrap gap-1">
                 {tutor.subjects.map((subject, index) => (
-                  <Badge key={index} variant="secondary">{subject}</Badge>
+                  <Badge key={index} variant="secondary">
+                    {subject}
+                  </Badge>
                 ))}
               </div>
             </div>
@@ -508,26 +656,37 @@ const Tutors = () => {
               <p className="text-sm">{tutor.joiningDate}</p>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Account Details</Label>
             <div className="bg-muted p-3 rounded">
-              <p className="text-sm"><strong>Bank:</strong> {tutor.accountDetails.bankName}</p>
-              <p className="text-sm"><strong>Account:</strong> {tutor.accountDetails.accountNumber}</p>
-              <p className="text-sm"><strong>IFSC:</strong> {tutor.accountDetails.ifsc}</p>
+              <p className="text-sm">
+                <strong>Bank:</strong> {tutor.accountDetails.bankName}
+              </p>
+              <p className="text-sm">
+                <strong>Account:</strong> {tutor.accountDetails.accountNumber}
+              </p>
+              <p className="text-sm">
+                <strong>IFSC:</strong> {tutor.accountDetails.ifsc}
+              </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Documents</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {Object.entries(tutor.documents).map(([key, value]) => (
-                value && (
-                  <Badge key={key} variant="outline" className="justify-center">
-                    {key.toUpperCase()}
-                  </Badge>
-                )
-              ))}
+              {Object.entries(tutor.documents).map(
+                ([key, value]) =>
+                  value && (
+                    <Badge
+                      key={key}
+                      variant="outline"
+                      className="justify-center"
+                    >
+                      {key.toUpperCase()}
+                    </Badge>
+                  )
+              )}
             </div>
           </div>
         </TabsContent>
@@ -536,21 +695,29 @@ const Tutors = () => {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Batch Assignment</h3>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "batch")}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(tutor, "batch")}
+              >
                 <Plus className="h-4 w-4 mr-1" />
                 Assign Batch
               </Button>
             </div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
             <Card>
               <CardContent className="p-3 text-center">
                 <div className="flex items-center justify-center gap-2">
                   <GraduationCap className="h-4 w-4 text-primary" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Batches</p>
-                    <p className="text-lg font-semibold">{tutor.batches.length}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Total Batches
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {tutor.batches.length}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -560,8 +727,12 @@ const Tutors = () => {
                 <div className="flex items-center justify-center gap-2">
                   <Users className="h-4 w-4 text-success" />
                   <div>
-                    <p className="text-sm text-muted-foreground">Active Batches</p>
-                    <p className="text-lg font-semibold">{tutor.batches.length}</p>
+                    <p className="text-sm text-muted-foreground">
+                      Active Batches
+                    </p>
+                    <p className="text-lg font-semibold">
+                      {tutor.batches.length}
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -583,14 +754,20 @@ const Tutors = () => {
             <Label>Assigned Batches</Label>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {tutor.batches.map((batchId, index) => {
-                const batchInfo = availableBatches.find(b => b.id === batchId);
+                const batchInfo = availableBatches.find(
+                  (b) => b.id === batchId
+                );
                 return (
                   <Card key={index}>
                     <CardContent className="p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{batchInfo?.name || batchId}</p>
-                          <p className="text-sm text-muted-foreground">Batch ID: {batchId}</p>
+                          <p className="font-medium">
+                            {batchInfo?.name || batchId}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Batch ID: {batchId}
+                          </p>
                         </div>
                         <Badge variant="success">Active</Badge>
                       </div>
@@ -599,31 +776,36 @@ const Tutors = () => {
                 );
               })}
             </div>
-            
+
             <div className="mt-4">
               <Label>Available Batches</Label>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
                 {availableBatches
-                  .filter(batch => !tutor.batches.includes(batch.id))
+                  .filter((batch) => !tutor.batches.includes(batch.id))
                   .map((batch) => (
                     <Card key={batch.id} className="border-dashed">
                       <CardContent className="p-3">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium">{batch.name}</p>
-                            <p className="text-sm text-muted-foreground">ID: {batch.id}</p>
+                            <p className="text-sm text-muted-foreground">
+                              ID: {batch.id}
+                            </p>
                           </div>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => {
-                              const updatedTutors = tutors.map(t => 
-                                t.id === tutor.id 
+                              const updatedTutors = tutors.map((t) =>
+                                t.id === tutor.id
                                   ? { ...t, batches: [...t.batches, batch.id] }
                                   : t
                               );
                               setTutors(updatedTutors);
-                              setSelectedTutor(updatedTutors.find(t => t.id === tutor.id) || null);
+                              setSelectedTutor(
+                                updatedTutors.find((t) => t.id === tutor.id) ||
+                                  null
+                              );
                               toast({
                                 title: "Batch Assigned",
                                 description: `${batch.name} assigned to tutor.`,
@@ -645,7 +827,11 @@ const Tutors = () => {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Payment Management</h3>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "payment")}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(tutor, "payment")}
+              >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Payment
               </Button>
@@ -657,28 +843,36 @@ const Tutors = () => {
               <CardContent className="p-4 text-center">
                 <DollarSign className="h-6 w-6 mx-auto mb-2" />
                 <p className="text-sm opacity-90">Total Salary</p>
-                <p className="text-xl font-bold">₹{tutor.salary.toLocaleString()}</p>
+                <p className="text-xl font-bold">
+                  ₹{tutor.salary.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
               <CardContent className="p-4 text-center">
                 <TrendingUp className="h-6 w-6 mx-auto mb-2" />
                 <p className="text-sm opacity-90">Paid Amount</p>
-                <p className="text-xl font-bold">₹{tutor.paidAmount.toLocaleString()}</p>
+                <p className="text-xl font-bold">
+                  ₹{tutor.paidAmount.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
               <CardContent className="p-4 text-center">
                 <Clock className="h-6 w-6 mx-auto mb-2" />
                 <p className="text-sm opacity-90">Balance Due</p>
-                <p className="text-xl font-bold">₹{(tutor.salary - tutor.paidAmount).toLocaleString()}</p>
+                <p className="text-xl font-bold">
+                  ₹{(tutor.salary - tutor.paidAmount).toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
               <CardContent className="p-4 text-center">
                 <Users className="h-6 w-6 mx-auto mb-2" />
                 <p className="text-sm opacity-90">Payment %</p>
-                <p className="text-xl font-bold">{Math.round((tutor.paidAmount / tutor.salary) * 100)}%</p>
+                <p className="text-xl font-bold">
+                  {Math.round((tutor.paidAmount / tutor.salary) * 100)}%
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -704,11 +898,21 @@ const Tutors = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h4 className="font-medium">{payment.category}</h4>
-                        <Badge variant={payment.status === "approved" ? "success" : payment.status === "rejected" ? "destructive" : "warning"}>
+                        <Badge
+                          variant={
+                            payment.status === "approved"
+                              ? "success"
+                              : payment.status === "rejected"
+                              ? "destructive"
+                              : "warning"
+                          }
+                        >
                           {payment.status}
                         </Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-1">Date: {payment.date}</p>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        Date: {payment.date}
+                      </p>
                       <p className="text-sm">{payment.description}</p>
                       {payment.screenshot && (
                         <Badge variant="outline" className="mt-2">
@@ -718,13 +922,27 @@ const Tutors = () => {
                       )}
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-lg">₹{payment.amount.toLocaleString()}</p>
-                      <p className="text-sm text-muted-foreground">Paid: ₹{payment.paid.toLocaleString()}</p>
+                      <p className="font-semibold text-lg">
+                        ₹{payment.amount.toLocaleString()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Paid: ₹{payment.paid.toLocaleString()}
+                      </p>
                       <div className="flex gap-1 mt-2">
-                        <Button size="sm" variant="ghost" onClick={() => handleEdit(tutor, "payment", payment)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleEdit(tutor, "payment", payment)}
+                        >
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => handleDelete(tutor.id, "payment", payment.id)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            handleDelete(tutor.id, "payment", payment.id)
+                          }
+                        >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -740,7 +958,11 @@ const Tutors = () => {
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-semibold">Attendance Management</h3>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={() => handleEdit(tutor, "attendance")}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(tutor, "attendance")}
+              >
                 <Plus className="h-4 w-4 mr-1" />
                 Add Record
               </Button>
@@ -753,7 +975,10 @@ const Tutors = () => {
                 <Calendar className="h-6 w-6 mx-auto mb-2 text-primary" />
                 <p className="text-sm text-muted-foreground">Total Present</p>
                 <p className="text-xl font-semibold text-success">
-                  {tutor.attendance.reduce((sum, record) => sum + record.present, 0)}
+                  {tutor.attendance.reduce(
+                    (sum, record) => sum + record.present,
+                    0
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -762,7 +987,10 @@ const Tutors = () => {
                 <Clock className="h-6 w-6 mx-auto mb-2 text-warning" />
                 <p className="text-sm text-muted-foreground">Total Leave</p>
                 <p className="text-xl font-semibold text-warning">
-                  {tutor.attendance.reduce((sum, record) => sum + record.leave, 0)}
+                  {tutor.attendance.reduce(
+                    (sum, record) => sum + record.leave,
+                    0
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -771,7 +999,10 @@ const Tutors = () => {
                 <TrendingUp className="h-6 w-6 mx-auto mb-2 text-info" />
                 <p className="text-sm text-muted-foreground">Overtime</p>
                 <p className="text-xl font-semibold text-info">
-                  {tutor.attendance.reduce((sum, record) => sum + record.overtime, 0)}
+                  {tutor.attendance.reduce(
+                    (sum, record) => sum + record.overtime,
+                    0
+                  )}
                 </p>
               </CardContent>
             </Card>
@@ -780,12 +1011,21 @@ const Tutors = () => {
                 <Users className="h-6 w-6 mx-auto mb-2 text-purple-500" />
                 <p className="text-sm text-muted-foreground">Attendance %</p>
                 <p className="text-xl font-semibold text-purple-500">
-                  {tutor.attendance.length > 0 
+                  {tutor.attendance.length > 0
                     ? Math.round(
-                        (tutor.attendance.reduce((sum, record) => sum + record.present, 0) / 
-                         tutor.attendance.reduce((sum, record) => sum + record.present + record.leave, 0)) * 100
+                        (tutor.attendance.reduce(
+                          (sum, record) => sum + record.present,
+                          0
+                        ) /
+                          tutor.attendance.reduce(
+                            (sum, record) =>
+                              sum + record.present + record.leave,
+                            0
+                          )) *
+                          100
                       )
-                    : 0}%
+                    : 0}
+                  %
                 </p>
               </CardContent>
             </Card>
@@ -798,7 +1038,9 @@ const Tutors = () => {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h4 className="font-medium">{record.month} {record.year}</h4>
+                      <h4 className="font-medium">
+                        {record.month} {record.year}
+                      </h4>
                       <div className="flex gap-6 text-sm mt-2">
                         <span className="flex items-center gap-1">
                           <div className="w-2 h-2 bg-success rounded-full"></div>
@@ -815,10 +1057,20 @@ const Tutors = () => {
                       </div>
                     </div>
                     <div className="flex gap-1">
-                      <Button size="sm" variant="ghost" onClick={() => handleEdit(tutor, "attendance", record)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => handleEdit(tutor, "attendance", record)}
+                      >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button size="sm" variant="ghost" onClick={() => handleDelete(tutor.id, "attendance", record.id)}>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() =>
+                          handleDelete(tutor.id, "attendance", record.id)
+                        }
+                      >
                         <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
@@ -837,7 +1089,9 @@ const Tutors = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Tutors Management</h1>
-          <p className="text-muted-foreground">Manage tutor profiles and information</p>
+          <p className="text-muted-foreground">
+            Manage tutor profiles and information
+          </p>
         </div>
         <AddNewTutorDialog />
       </div>
@@ -865,7 +1119,9 @@ const Tutors = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active Tutors</p>
-                <p className="text-xl font-semibold">{tutors.filter(t => t.status === "active").length}</p>
+                <p className="text-xl font-semibold">
+                  {tutors.filter((t) => t.status === "active").length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -921,7 +1177,7 @@ const Tutors = () => {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <div className="flex gap-2 mb-4">
             <Button
@@ -936,14 +1192,14 @@ const Tutors = () => {
               size="sm"
               onClick={() => setActiveTab("active")}
             >
-              Active ({tutors.filter(t => t.status === "active").length})
+              Active ({tutors.filter((t) => t.status === "active").length})
             </Button>
             <Button
               variant={activeTab === "inactive" ? "default" : "outline"}
               size="sm"
               onClick={() => setActiveTab("inactive")}
             >
-              Inactive ({tutors.filter(t => t.status === "inactive").length})
+              Inactive ({tutors.filter((t) => t.status === "inactive").length})
             </Button>
           </div>
 
@@ -967,11 +1223,18 @@ const Tutors = () => {
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage src={tutor.photo} />
-                          <AvatarFallback>{tutor.firstName[0]}{tutor.lastName[0]}</AvatarFallback>
+                          <AvatarFallback>
+                            {tutor.firstName[0]}
+                            {tutor.lastName[0]}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{tutor.firstName} {tutor.lastName}</p>
-                          <p className="text-sm text-muted-foreground">{tutor.email}</p>
+                          <p className="font-medium">
+                            {tutor.firstName} {tutor.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {tutor.email}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -981,25 +1244,43 @@ const Tutors = () => {
                     <td className="p-2">
                       <div>
                         <p className="text-sm">{tutor.phone}</p>
-                        <p className="text-sm text-muted-foreground">{tutor.whatsapp}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {tutor.whatsapp}
+                        </p>
                       </div>
                     </td>
                     <td className="p-2">
                       <div className="flex flex-wrap gap-1">
                         {tutor.subjects.slice(0, 2).map((subject, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">{subject}</Badge>
+                          <Badge
+                            key={index}
+                            variant="secondary"
+                            className="text-xs"
+                          >
+                            {subject}
+                          </Badge>
                         ))}
-                        {tutor.subjects.length > 2 && <span className="text-xs text-muted-foreground">+{tutor.subjects.length - 2}</span>}
+                        {tutor.subjects.length > 2 && (
+                          <span className="text-xs text-muted-foreground">
+                            +{tutor.subjects.length - 2}
+                          </span>
+                        )}
                       </div>
                     </td>
                     <td className="p-2">
                       <div>
-                        <p className="font-medium">₹{tutor.salary.toLocaleString()}</p>
+                        <p className="font-medium">
+                          ₹{tutor.salary.toLocaleString()}
+                        </p>
                         <p className="text-xs text-muted-foreground">Monthly</p>
                       </div>
                     </td>
                     <td className="p-2">
-                      <Badge variant={tutor.status === "active" ? "success" : "secondary"}>
+                      <Badge
+                        variant={
+                          tutor.status === "active" ? "success" : "secondary"
+                        }
+                      >
                         {tutor.status}
                       </Badge>
                     </td>
@@ -1007,16 +1288,30 @@ const Tutors = () => {
                       <div className="flex items-center gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedTutor(tutor)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedTutor(tutor)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          {selectedTutor && <TutorDetailsDialog tutor={selectedTutor} />}
+                          {selectedTutor && (
+                            <TutorDetailsDialog tutor={selectedTutor} />
+                          )}
                         </Dialog>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(tutor, "personal")}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(tutor, "personal")}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(tutor.id)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(tutor.id)}
+                        >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -1029,7 +1324,9 @@ const Tutors = () => {
 
           {filteredTutors.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No tutors found matching your search.</p>
+              <p className="text-muted-foreground">
+                No tutors found matching your search.
+              </p>
             </div>
           )}
         </CardContent>

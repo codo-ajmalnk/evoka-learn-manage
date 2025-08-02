@@ -1,14 +1,31 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Edit, Trash2, Plus, Search, Filter, Users, Briefcase, Calendar, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Briefcase,
+  Calendar,
+  DollarSign,
+  Edit,
+  Eye,
+  Filter,
+  Plus,
+  Search,
+  Trash2,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
 
 interface Executive {
   id: string;
@@ -86,28 +103,28 @@ const dummyExecutives: Executive[] = [
     accountDetails: {
       bankName: "ICICI Bank",
       accountNumber: "40100123456789",
-      ifsc: "ICIC0001234"
+      ifsc: "ICIC0001234",
     },
     documents: {
       cv: "amit_cv.pdf",
       pan: "amit_pan.pdf",
-      aadhar: "amit_aadhar.pdf"
+      aadhar: "amit_aadhar.pdf",
     },
     attendance: [
-      { month: "November 2024", present: 23, leave: 2 },
-      { month: "October 2024", present: 25, leave: 1 }
+      { month: "November 2025", present: 23, leave: 2 },
+      { month: "October 2025", present: 25, leave: 1 },
     ],
     payments: [
       {
         id: "PAY003",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 65000,
         paid: 65000,
         status: "approved",
-        description: "November salary"
-      }
-    ]
+        description: "November salary",
+      },
+    ],
   },
   {
     id: "EXE002",
@@ -132,50 +149,56 @@ const dummyExecutives: Executive[] = [
     accountDetails: {
       bankName: "Axis Bank",
       accountNumber: "60100123456789",
-      ifsc: "UTIB0001234"
+      ifsc: "UTIB0001234",
     },
     documents: {
       cv: "sneha_cv.pdf",
-      pan: "sneha_pan.pdf"
+      pan: "sneha_pan.pdf",
     },
     attendance: [
-      { month: "November 2024", present: 24, leave: 1 },
-      { month: "October 2024", present: 26, leave: 0 }
+      { month: "November 2025", present: 24, leave: 1 },
+      { month: "October 2025", present: 26, leave: 0 },
     ],
     payments: [
       {
         id: "PAY004",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 55000,
         paid: 55000,
         status: "approved",
-        description: "November salary"
-      }
-    ]
-  }
+        description: "November salary",
+      },
+    ],
+  },
 ];
 
 const Executives = () => {
   const [executives, setExecutives] = useState<Executive[]>(dummyExecutives);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedExecutive, setSelectedExecutive] = useState<Executive | null>(null);
+  const [selectedExecutive, setSelectedExecutive] = useState<Executive | null>(
+    null
+  );
   const { toast } = useToast();
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";
 
-  const filteredExecutives = executives.filter(executive => {
-    const matchesSearch = `${executive.firstName} ${executive.lastName} ${executive.email} ${executive.id}`
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    
+  const filteredExecutives = executives.filter((executive) => {
+    const matchesSearch =
+      `${executive.firstName} ${executive.lastName} ${executive.email} ${executive.id}`
+        .toLowerCase()
+        .includes(searchTerm.toLowerCase());
+
     if (activeTab === "all") return matchesSearch;
-    if (activeTab === "active") return matchesSearch && executive.status === "active";
-    if (activeTab === "inactive") return matchesSearch && executive.status === "inactive";
-    if (activeTab === "my" && userRole === "manager") return matchesSearch && executive.status === "active";
-    
+    if (activeTab === "active")
+      return matchesSearch && executive.status === "active";
+    if (activeTab === "inactive")
+      return matchesSearch && executive.status === "inactive";
+    if (activeTab === "my" && userRole === "manager")
+      return matchesSearch && executive.status === "active";
+
     return matchesSearch;
   });
 
@@ -187,7 +210,7 @@ const Executives = () => {
   };
 
   const handleDelete = (id: string) => {
-    setExecutives(executives.filter(executive => executive.id !== id));
+    setExecutives(executives.filter((executive) => executive.id !== id));
     toast({
       title: "Executive Deleted",
       description: "Executive has been successfully deleted.",
@@ -200,11 +223,18 @@ const Executives = () => {
         <DialogTitle className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
             <AvatarImage src={executive.photo} />
-            <AvatarFallback>{executive.firstName[0]}{executive.lastName[0]}</AvatarFallback>
+            <AvatarFallback>
+              {executive.firstName[0]}
+              {executive.lastName[0]}
+            </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="text-xl font-semibold">{executive.firstName} {executive.lastName}</h3>
-            <p className="text-sm text-muted-foreground">{executive.id} • {executive.designation}</p>
+            <h3 className="text-xl font-semibold">
+              {executive.firstName} {executive.lastName}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {executive.id} • {executive.designation}
+            </p>
           </div>
         </DialogTitle>
       </DialogHeader>
@@ -245,7 +275,9 @@ const Executives = () => {
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Address</Label>
-              <p className="text-sm">{executive.address}, {executive.pin}</p>
+              <p className="text-sm">
+                {executive.address}, {executive.pin}
+              </p>
             </div>
           </div>
         </TabsContent>
@@ -273,26 +305,38 @@ const Executives = () => {
               <p className="text-sm">{executive.joiningDate}</p>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Account Details</Label>
             <div className="bg-muted p-3 rounded">
-              <p className="text-sm"><strong>Bank:</strong> {executive.accountDetails.bankName}</p>
-              <p className="text-sm"><strong>Account:</strong> {executive.accountDetails.accountNumber}</p>
-              <p className="text-sm"><strong>IFSC:</strong> {executive.accountDetails.ifsc}</p>
+              <p className="text-sm">
+                <strong>Bank:</strong> {executive.accountDetails.bankName}
+              </p>
+              <p className="text-sm">
+                <strong>Account:</strong>{" "}
+                {executive.accountDetails.accountNumber}
+              </p>
+              <p className="text-sm">
+                <strong>IFSC:</strong> {executive.accountDetails.ifsc}
+              </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Documents</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {Object.entries(executive.documents).map(([key, value]) => (
-                value && (
-                  <Badge key={key} variant="outline" className="justify-center">
-                    {key.toUpperCase()}
-                  </Badge>
-                )
-              ))}
+              {Object.entries(executive.documents).map(
+                ([key, value]) =>
+                  value && (
+                    <Badge
+                      key={key}
+                      variant="outline"
+                      className="justify-center"
+                    >
+                      {key.toUpperCase()}
+                    </Badge>
+                  )
+              )}
             </div>
           </div>
         </TabsContent>
@@ -302,19 +346,25 @@ const Executives = () => {
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Total Salary</p>
-                <p className="text-lg font-semibold">₹{executive.salary.toLocaleString()}</p>
+                <p className="text-lg font-semibold">
+                  ₹{executive.salary.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Paid</p>
-                <p className="text-lg font-semibold text-success">₹{executive.paidAmount.toLocaleString()}</p>
+                <p className="text-lg font-semibold text-success">
+                  ₹{executive.paidAmount.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Balance</p>
-                <p className="text-lg font-semibold text-warning">₹{(executive.salary - executive.paidAmount).toLocaleString()}</p>
+                <p className="text-lg font-semibold text-warning">
+                  ₹{(executive.salary - executive.paidAmount).toLocaleString()}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -327,12 +377,24 @@ const Executives = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{payment.category}</p>
-                      <p className="text-sm text-muted-foreground">{payment.date}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {payment.date}
+                      </p>
                       <p className="text-sm">{payment.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">₹{payment.amount.toLocaleString()}</p>
-                      <Badge variant={payment.status === "approved" ? "success" : payment.status === "rejected" ? "destructive" : "warning"}>
+                      <p className="font-semibold">
+                        ₹{payment.amount.toLocaleString()}
+                      </p>
+                      <Badge
+                        variant={
+                          payment.status === "approved"
+                            ? "success"
+                            : payment.status === "rejected"
+                            ? "destructive"
+                            : "warning"
+                        }
+                      >
                         {payment.status}
                       </Badge>
                     </div>
@@ -354,8 +416,12 @@ const Executives = () => {
                       <p className="font-medium">{record.month}</p>
                     </div>
                     <div className="flex gap-4 text-sm">
-                      <span className="text-success">Present: {record.present}</span>
-                      <span className="text-warning">Leave: {record.leave}</span>
+                      <span className="text-success">
+                        Present: {record.present}
+                      </span>
+                      <span className="text-warning">
+                        Leave: {record.leave}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -373,19 +439,37 @@ const Executives = () => {
       case "hr":
         return [
           { key: "all", label: `All Executives (${executives.length})` },
-          { key: "active", label: `Active (${executives.filter(e => e.status === "active").length})` },
-          { key: "inactive", label: `Inactive (${executives.filter(e => e.status === "inactive").length})` }
+          {
+            key: "active",
+            label: `Active (${
+              executives.filter((e) => e.status === "active").length
+            })`,
+          },
+          {
+            key: "inactive",
+            label: `Inactive (${
+              executives.filter((e) => e.status === "inactive").length
+            })`,
+          },
         ];
       case "manager":
         return [
           { key: "all", label: `All Executives (${executives.length})` },
-          { key: "my", label: `My Executives (${executives.filter(e => e.status === "active").length})` },
-          { key: "inactive", label: `Inactive (${executives.filter(e => e.status === "inactive").length})` }
+          {
+            key: "my",
+            label: `My Executives (${
+              executives.filter((e) => e.status === "active").length
+            })`,
+          },
+          {
+            key: "inactive",
+            label: `Inactive (${
+              executives.filter((e) => e.status === "inactive").length
+            })`,
+          },
         ];
       default:
-        return [
-          { key: "all", label: `All Executives (${executives.length})` }
-        ];
+        return [{ key: "all", label: `All Executives (${executives.length})` }];
     }
   };
 
@@ -394,13 +478,22 @@ const Executives = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Executives Management</h1>
-          <p className="text-muted-foreground">Manage executive profiles and information</p>
+          <p className="text-muted-foreground">
+            Manage executive profiles and information
+          </p>
         </div>
-        {(userRole === "admin" || userRole === "hr" || userRole === "manager") && (
-          <Button className="flex items-center gap-2" onClick={() => toast({
-            title: "Add New Executive",
-            description: "Opening add new executive dialog",
-          })}>
+        {(userRole === "admin" ||
+          userRole === "hr" ||
+          userRole === "manager") && (
+          <Button
+            className="flex items-center gap-2"
+            onClick={() =>
+              toast({
+                title: "Add New Executive",
+                description: "Opening add new executive dialog",
+              })
+            }
+          >
             <Plus className="h-4 w-4" />
             Add New Executive
           </Button>
@@ -415,7 +508,9 @@ const Executives = () => {
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Executives</p>
+                <p className="text-sm text-muted-foreground">
+                  Total Executives
+                </p>
                 <p className="text-xl font-semibold">{executives.length}</p>
               </div>
             </div>
@@ -430,7 +525,9 @@ const Executives = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-xl font-semibold">{executives.filter(e => e.status === "active").length}</p>
+                <p className="text-xl font-semibold">
+                  {executives.filter((e) => e.status === "active").length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -486,7 +583,7 @@ const Executives = () => {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <div className="flex gap-2 mb-4">
             {getTabsForRole().map((tab) => (
@@ -521,11 +618,18 @@ const Executives = () => {
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage src={executive.photo} />
-                          <AvatarFallback>{executive.firstName[0]}{executive.lastName[0]}</AvatarFallback>
+                          <AvatarFallback>
+                            {executive.firstName[0]}
+                            {executive.lastName[0]}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{executive.firstName} {executive.lastName}</p>
-                          <p className="text-sm text-muted-foreground">{executive.designation}</p>
+                          <p className="font-medium">
+                            {executive.firstName} {executive.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {executive.designation}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -535,7 +639,9 @@ const Executives = () => {
                     <td className="p-2">
                       <div>
                         <p className="text-sm">{executive.phone}</p>
-                        <p className="text-sm text-muted-foreground">{executive.email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {executive.email}
+                        </p>
                       </div>
                     </td>
                     <td className="p-2">
@@ -543,12 +649,20 @@ const Executives = () => {
                     </td>
                     <td className="p-2">
                       <div>
-                        <p className="font-medium">₹{executive.salary.toLocaleString()}</p>
+                        <p className="font-medium">
+                          ₹{executive.salary.toLocaleString()}
+                        </p>
                         <p className="text-xs text-muted-foreground">Monthly</p>
                       </div>
                     </td>
                     <td className="p-2">
-                      <Badge variant={executive.status === "active" ? "success" : "secondary"}>
+                      <Badge
+                        variant={
+                          executive.status === "active"
+                            ? "success"
+                            : "secondary"
+                        }
+                      >
                         {executive.status}
                       </Badge>
                     </td>
@@ -556,17 +670,35 @@ const Executives = () => {
                       <div className="flex items-center gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedExecutive(executive)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedExecutive(executive)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
-                          {selectedExecutive && <ExecutiveDetailsDialog executive={selectedExecutive} />}
+                          {selectedExecutive && (
+                            <ExecutiveDetailsDialog
+                              executive={selectedExecutive}
+                            />
+                          )}
                         </Dialog>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(executive)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(executive)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        {(userRole === "admin" || userRole === "hr" || userRole === "manager") && (
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(executive.id)}>
+                        {(userRole === "admin" ||
+                          userRole === "hr" ||
+                          userRole === "manager") && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(executive.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
@@ -580,7 +712,9 @@ const Executives = () => {
 
           {filteredExecutives.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No executives found matching your search.</p>
+              <p className="text-muted-foreground">
+                No executives found matching your search.
+              </p>
             </div>
           )}
         </CardContent>

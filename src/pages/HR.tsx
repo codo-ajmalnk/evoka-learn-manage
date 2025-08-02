@@ -1,14 +1,31 @@
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Eye, Edit, Trash2, Plus, Search, Filter, Users, UserCheck, Calendar, DollarSign } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Calendar,
+  DollarSign,
+  Edit,
+  Eye,
+  Filter,
+  Plus,
+  Search,
+  Trash2,
+  UserCheck,
+  Users,
+} from "lucide-react";
+import { useState } from "react";
 
 interface HRPerson {
   id: string;
@@ -86,29 +103,29 @@ const dummyHRPersons: HRPerson[] = [
     accountDetails: {
       bankName: "ICICI Bank",
       accountNumber: "40100555666777",
-      ifsc: "ICIC0001236"
+      ifsc: "ICIC0001236",
     },
     documents: {
       cv: "deepa_cv.pdf",
       pan: "deepa_pan.pdf",
       aadhar: "deepa_aadhar.pdf",
-      certificates: ["hr_certification.pdf", "mba_degree.pdf"]
+      certificates: ["hr_certification.pdf", "mba_degree.pdf"],
     },
     attendance: [
-      { month: "November 2024", present: 25, leave: 0 },
-      { month: "October 2024", present: 24, leave: 2 }
+      { month: "November 2025", present: 25, leave: 0 },
+      { month: "October 2025", present: 24, leave: 2 },
     ],
     payments: [
       {
         id: "PAY007",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 70000,
         paid: 70000,
         status: "approved",
-        description: "November salary"
-      }
-    ]
+        description: "November salary",
+      },
+    ],
   },
   {
     id: "HR002",
@@ -133,29 +150,29 @@ const dummyHRPersons: HRPerson[] = [
     accountDetails: {
       bankName: "SBI",
       accountNumber: "30100555666777",
-      ifsc: "SBIN0001236"
+      ifsc: "SBIN0001236",
     },
     documents: {
       cv: "ravi_cv.pdf",
       pan: "ravi_pan.pdf",
-      aadhar: "ravi_aadhar.pdf"
+      aadhar: "ravi_aadhar.pdf",
     },
     attendance: [
-      { month: "November 2024", present: 23, leave: 2 },
-      { month: "October 2024", present: 26, leave: 0 }
+      { month: "November 2025", present: 23, leave: 2 },
+      { month: "October 2025", present: 26, leave: 0 },
     ],
     payments: [
       {
         id: "PAY008",
         category: "Monthly Salary",
-        date: "2024-11-01",
+        date: "2025-11-01",
         amount: 60000,
         paid: 60000,
         status: "approved",
-        description: "November salary"
-      }
-    ]
-  }
+        description: "November salary",
+      },
+    ],
+  },
 ];
 
 const HR = () => {
@@ -168,15 +185,16 @@ const HR = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";
 
-  const filteredHRPersons = hrPersons.filter(hr => {
+  const filteredHRPersons = hrPersons.filter((hr) => {
     const matchesSearch = `${hr.firstName} ${hr.lastName} ${hr.email} ${hr.id}`
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    
+
     if (activeTab === "all") return matchesSearch;
     if (activeTab === "active") return matchesSearch && hr.status === "active";
-    if (activeTab === "inactive") return matchesSearch && hr.status === "inactive";
-    
+    if (activeTab === "inactive")
+      return matchesSearch && hr.status === "inactive";
+
     return matchesSearch;
   });
 
@@ -188,7 +206,7 @@ const HR = () => {
   };
 
   const handleDelete = (id: string) => {
-    setHRPersons(hrPersons.filter(hr => hr.id !== id));
+    setHRPersons(hrPersons.filter((hr) => hr.id !== id));
     toast({
       title: "HR Personnel Deleted",
       description: "HR personnel has been successfully deleted.",
@@ -201,11 +219,18 @@ const HR = () => {
         <DialogTitle className="flex items-center gap-3">
           <Avatar className="h-12 w-12">
             <AvatarImage src={hr.photo} />
-            <AvatarFallback>{hr.firstName[0]}{hr.lastName[0]}</AvatarFallback>
+            <AvatarFallback>
+              {hr.firstName[0]}
+              {hr.lastName[0]}
+            </AvatarFallback>
           </Avatar>
           <div>
-            <h3 className="text-xl font-semibold">{hr.firstName} {hr.lastName}</h3>
-            <p className="text-sm text-muted-foreground">{hr.id} • {hr.designation}</p>
+            <h3 className="text-xl font-semibold">
+              {hr.firstName} {hr.lastName}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {hr.id} • {hr.designation}
+            </p>
           </div>
         </DialogTitle>
       </DialogHeader>
@@ -246,7 +271,9 @@ const HR = () => {
             </div>
             <div className="space-y-2 md:col-span-2">
               <Label>Address</Label>
-              <p className="text-sm">{hr.address}, {hr.pin}</p>
+              <p className="text-sm">
+                {hr.address}, {hr.pin}
+              </p>
             </div>
           </div>
         </TabsContent>
@@ -274,26 +301,37 @@ const HR = () => {
               <p className="text-sm">{hr.joiningDate}</p>
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Account Details</Label>
             <div className="bg-muted p-3 rounded">
-              <p className="text-sm"><strong>Bank:</strong> {hr.accountDetails.bankName}</p>
-              <p className="text-sm"><strong>Account:</strong> {hr.accountDetails.accountNumber}</p>
-              <p className="text-sm"><strong>IFSC:</strong> {hr.accountDetails.ifsc}</p>
+              <p className="text-sm">
+                <strong>Bank:</strong> {hr.accountDetails.bankName}
+              </p>
+              <p className="text-sm">
+                <strong>Account:</strong> {hr.accountDetails.accountNumber}
+              </p>
+              <p className="text-sm">
+                <strong>IFSC:</strong> {hr.accountDetails.ifsc}
+              </p>
             </div>
           </div>
 
           <div className="space-y-2">
             <Label>Documents</Label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {Object.entries(hr.documents).map(([key, value]) => (
-                value && (
-                  <Badge key={key} variant="outline" className="justify-center">
-                    {key.toUpperCase()}
-                  </Badge>
-                )
-              ))}
+              {Object.entries(hr.documents).map(
+                ([key, value]) =>
+                  value && (
+                    <Badge
+                      key={key}
+                      variant="outline"
+                      className="justify-center"
+                    >
+                      {key.toUpperCase()}
+                    </Badge>
+                  )
+              )}
             </div>
           </div>
         </TabsContent>
@@ -303,19 +341,25 @@ const HR = () => {
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Total Salary</p>
-                <p className="text-lg font-semibold">₹{hr.salary.toLocaleString()}</p>
+                <p className="text-lg font-semibold">
+                  ₹{hr.salary.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Paid</p>
-                <p className="text-lg font-semibold text-success">₹{hr.paidAmount.toLocaleString()}</p>
+                <p className="text-lg font-semibold text-success">
+                  ₹{hr.paidAmount.toLocaleString()}
+                </p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-3 text-center">
                 <p className="text-sm text-muted-foreground">Balance</p>
-                <p className="text-lg font-semibold text-warning">₹{(hr.salary - hr.paidAmount).toLocaleString()}</p>
+                <p className="text-lg font-semibold text-warning">
+                  ₹{(hr.salary - hr.paidAmount).toLocaleString()}
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -328,12 +372,24 @@ const HR = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-medium">{payment.category}</p>
-                      <p className="text-sm text-muted-foreground">{payment.date}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {payment.date}
+                      </p>
                       <p className="text-sm">{payment.description}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold">₹{payment.amount.toLocaleString()}</p>
-                      <Badge variant={payment.status === "approved" ? "success" : payment.status === "rejected" ? "destructive" : "warning"}>
+                      <p className="font-semibold">
+                        ₹{payment.amount.toLocaleString()}
+                      </p>
+                      <Badge
+                        variant={
+                          payment.status === "approved"
+                            ? "success"
+                            : payment.status === "rejected"
+                            ? "destructive"
+                            : "warning"
+                        }
+                      >
                         {payment.status}
                       </Badge>
                     </div>
@@ -355,8 +411,12 @@ const HR = () => {
                       <p className="font-medium">{record.month}</p>
                     </div>
                     <div className="flex gap-4 text-sm">
-                      <span className="text-success">Present: {record.present}</span>
-                      <span className="text-warning">Leave: {record.leave}</span>
+                      <span className="text-success">
+                        Present: {record.present}
+                      </span>
+                      <span className="text-warning">
+                        Leave: {record.leave}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -374,7 +434,9 @@ const HR = () => {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-2">Access Restricted</h2>
-          <p className="text-muted-foreground">You don't have permission to view this page.</p>
+          <p className="text-muted-foreground">
+            You don't have permission to view this page.
+          </p>
         </div>
       </div>
     );
@@ -385,7 +447,9 @@ const HR = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">HR Management</h1>
-          <p className="text-muted-foreground">Manage HR personnel and information</p>
+          <p className="text-muted-foreground">
+            Manage HR personnel and information
+          </p>
         </div>
         {userRole === "admin" && (
           <Button className="flex items-center gap-2">
@@ -418,7 +482,9 @@ const HR = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active</p>
-                <p className="text-xl font-semibold">{hrPersons.filter(hr => hr.status === "active").length}</p>
+                <p className="text-xl font-semibold">
+                  {hrPersons.filter((hr) => hr.status === "active").length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -474,7 +540,7 @@ const HR = () => {
             </div>
           </div>
         </CardHeader>
-        
+
         <CardContent>
           <div className="flex gap-2 mb-4">
             <Button
@@ -489,14 +555,15 @@ const HR = () => {
               size="sm"
               onClick={() => setActiveTab("active")}
             >
-              Active ({hrPersons.filter(hr => hr.status === "active").length})
+              Active ({hrPersons.filter((hr) => hr.status === "active").length})
             </Button>
             <Button
               variant={activeTab === "inactive" ? "default" : "outline"}
               size="sm"
               onClick={() => setActiveTab("inactive")}
             >
-              Inactive ({hrPersons.filter(hr => hr.status === "inactive").length})
+              Inactive (
+              {hrPersons.filter((hr) => hr.status === "inactive").length})
             </Button>
           </div>
 
@@ -521,11 +588,18 @@ const HR = () => {
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarImage src={hr.photo} />
-                          <AvatarFallback>{hr.firstName[0]}{hr.lastName[0]}</AvatarFallback>
+                          <AvatarFallback>
+                            {hr.firstName[0]}
+                            {hr.lastName[0]}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium">{hr.firstName} {hr.lastName}</p>
-                          <p className="text-sm text-muted-foreground">{hr.designation}</p>
+                          <p className="font-medium">
+                            {hr.firstName} {hr.lastName}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {hr.designation}
+                          </p>
                         </div>
                       </div>
                     </td>
@@ -535,7 +609,9 @@ const HR = () => {
                     <td className="p-2">
                       <div>
                         <p className="text-sm">{hr.phone}</p>
-                        <p className="text-sm text-muted-foreground">{hr.email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {hr.email}
+                        </p>
                       </div>
                     </td>
                     <td className="p-2">
@@ -546,12 +622,18 @@ const HR = () => {
                     </td>
                     <td className="p-2">
                       <div>
-                        <p className="font-medium">₹{hr.salary.toLocaleString()}</p>
+                        <p className="font-medium">
+                          ₹{hr.salary.toLocaleString()}
+                        </p>
                         <p className="text-xs text-muted-foreground">Monthly</p>
                       </div>
                     </td>
                     <td className="p-2">
-                      <Badge variant={hr.status === "active" ? "success" : "secondary"}>
+                      <Badge
+                        variant={
+                          hr.status === "active" ? "success" : "secondary"
+                        }
+                      >
                         {hr.status}
                       </Badge>
                     </td>
@@ -559,17 +641,29 @@ const HR = () => {
                       <div className="flex items-center gap-2">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button variant="ghost" size="sm" onClick={() => setSelectedHR(hr)}>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setSelectedHR(hr)}
+                            >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           {selectedHR && <HRDetailsDialog hr={selectedHR} />}
                         </Dialog>
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(hr)}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(hr)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         {userRole === "admin" && (
-                          <Button variant="ghost" size="sm" onClick={() => handleDelete(hr.id)}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(hr.id)}
+                          >
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         )}
@@ -583,7 +677,9 @@ const HR = () => {
 
           {filteredHRPersons.length === 0 && (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">No HR personnel found matching your search.</p>
+              <p className="text-muted-foreground">
+                No HR personnel found matching your search.
+              </p>
             </div>
           )}
         </CardContent>

@@ -1,12 +1,24 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { GraduationCap, Mail, Lock, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { GraduationCap, Lock, Mail, User } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -17,7 +29,7 @@ const Login = () => {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password || !role) {
       toast({
         title: "Error",
@@ -28,11 +40,14 @@ const Login = () => {
     }
 
     // Simulate login with dummy data
-    localStorage.setItem("user", JSON.stringify({
-      email,
-      role,
-      name: "John Doe"
-    }));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({
+        email,
+        role,
+        name: "John Doe",
+      })
+    );
 
     toast({
       title: "Login Successful",
@@ -52,16 +67,15 @@ const Login = () => {
               <GraduationCap className="h-8 w-8 text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-foreground mb-2">Evoka Learning</h1>
-          <p className="text-muted-foreground">Advertising School Management System</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Evoka School of Advertising
+          </h1>
         </div>
 
         <Card className="shadow-card border-0">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Welcome Back</CardTitle>
-            <CardDescription>
-              Please sign in to your account
-            </CardDescription>
+            <CardDescription>Please sign in to your account</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -109,7 +123,6 @@ const Login = () => {
                       <SelectItem value="hr">HR</SelectItem>
                       <SelectItem value="executive">Executive</SelectItem>
                       <SelectItem value="tutor">Tutor</SelectItem>
-                      <SelectItem value="student">Student</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -118,16 +131,12 @@ const Login = () => {
               <Button type="submit" className="w-full" size="lg">
                 Sign In
               </Button>
-
-              <div className="text-center text-sm text-muted-foreground">
-                Demo credentials: Use any email/password with a role
-              </div>
             </form>
           </CardContent>
         </Card>
 
         <div className="text-center mt-6 text-sm text-muted-foreground">
-          © 2024 Evoka Communications. All rights reserved.
+          © 2025 Evoka. All rights reserved.
         </div>
       </div>
     </div>
