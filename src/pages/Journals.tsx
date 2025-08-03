@@ -39,7 +39,8 @@ import {
   Trash2,
   Wallet,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
 // Dummy data
 const journalEntries = [
@@ -75,9 +76,23 @@ const journalEntries = [
 ];
 
 const Journals = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTab, setSelectedTab] = useState("all");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <CardGridSkeleton cards={6} columns={3} showHeader={true} />;
+  }
 
   const filteredEntries = journalEntries.filter(
     (entry) =>
