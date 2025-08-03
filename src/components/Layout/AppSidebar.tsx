@@ -297,32 +297,47 @@ export function AppSidebar() {
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "bg-red-500/20 text-red-400 border-l-4 border-red-500 font-medium"
-      : "text-gray-300 hover:bg-gray-800/50 hover:text-white focus:bg-gray-800/50 focus:text-white";
+      ? "bg-accent/80 text-foreground border border-border/50 font-medium shadow-sm"
+      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground focus:bg-accent/50 focus:text-foreground";
 
   return (
     <Sidebar
       className={`${
         collapsed ? "w-16" : "w-64"
-      } transition-all duration-200 ease-in-out border-r border-gray-700 bg-gray-900 min-h-screen flex-shrink-0 shadow-lg`}
+      } transition-all duration-300 ease-in-out border-r border-border/50 bg-card/80 backdrop-blur-xl min-h-screen flex-shrink-0 shadow-xl`}
       collapsible="offcanvas"
     >
       <SidebarContent className="h-full flex flex-col">
         {/* Brand Header */}
-        <div className="p-4 border-b border-gray-700 flex-shrink-0">
+        <div className="p-6 border-b border-border/30 flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
           <div className="flex items-center gap-3">
-            <img
-              src="/evoka-logo.png"
-              alt="Evoka Logo"
-              className="h-8 w-auto"
-            />
+            <div className="p-2 rounded-xl bg-primary/10 shadow-sm">
+              <img
+                src="/evoka-logo.png"
+                alt="Evoka Logo"
+                className="h-6 w-auto"
+              />
+            </div>
+            {!collapsed && (
+              <div className="flex flex-col">
+                <h1 className="text-lg font-bold text-foreground">Evoka</h1>
+                <p className="text-xs text-muted-foreground font-medium">
+                  Learn & Manage
+                </p>
+              </div>
+            )}
           </div>
         </div>
+
         {/* Navigation Menu */}
         <nav
-          className="flex-1 p-4 space-y-1 overflow-y-auto"
+          className="flex-1 p-4 space-y-2 overflow-y-auto scrollbar-hide"
           role="navigation"
           aria-label="Main navigation"
+          style={{
+            scrollbarWidth: "none" /* Firefox */,
+            msOverflowStyle: "none" /* Internet Explorer 10+ */,
+          }}
         >
           <SidebarGroup>
             <SidebarGroupContent>
@@ -333,7 +348,7 @@ export function AppSidebar() {
                       <NavLink
                         to={item.url}
                         end
-                        className={`${getNavCls} group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2`}
+                        className={`${getNavCls} group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/20 focus:ring-offset-2 hover:shadow-sm`}
                         aria-label={
                           item.description
                             ? `${item.title} - ${item.description}`
@@ -341,10 +356,12 @@ export function AppSidebar() {
                         }
                         title={item.description}
                       >
-                        <item.icon
-                          className="h-5 w-5 flex-shrink-0"
-                          aria-hidden="true"
-                        />
+                        <div className="p-1.5 rounded-lg bg-background/50 group-hover:bg-primary/10 transition-colors duration-200">
+                          <item.icon
+                            className="h-4 w-4 flex-shrink-0"
+                            aria-hidden="true"
+                          />
+                        </div>
                         {!collapsed && (
                           <span className="font-medium truncate">
                             {item.title}
@@ -358,6 +375,27 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </nav>
+
+        {/* User Info Section */}
+        {!collapsed && (
+          <div className="p-4 border-t border-border/30 bg-gradient-to-r from-muted/20 to-background/50">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-background/50 border border-border/30 shadow-sm">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+                <span className="text-xs font-bold text-white">
+                  {userRole.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {userRole}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {userRole} Access
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
       </SidebarContent>
     </Sidebar>
   );
