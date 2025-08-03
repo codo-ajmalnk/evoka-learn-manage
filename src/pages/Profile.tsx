@@ -18,19 +18,7 @@ const Profile = () => {
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
 
-  useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
-    return <ProfileSkeleton />;
-  }
-  
+  // Move profile state before conditional return to fix hooks order
   const [profile, setProfile] = useState({
     name: userData.name || 'John Doe',
     email: userData.email || 'john.doe@evoka.in',
@@ -47,6 +35,19 @@ const Profile = () => {
     emergencyContact: '+91 9876543211',
     bio: 'Experienced administrator with a passion for education technology and student development.'
   });
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
 
   const handleSave = () => {
     // Save profile data
