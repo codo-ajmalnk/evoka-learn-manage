@@ -246,20 +246,7 @@ const Settings = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1400);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
-    return <FormSkeleton fields={10} showHeader={true} />;
-  }
-
-  // State for all data
+  // State for all data - moved before conditional return to fix hooks order
   const [coursesData, setCoursesData] = useState<Course[]>(initialCourses);
   const [syllabiData, setSyllabiData] = useState<Syllabus[]>(initialSyllabi);
   const [batchesData, setBatchesData] = useState<Batch[]>(initialBatches);
@@ -280,6 +267,19 @@ const Settings = () => {
     endDate: "",
     syllabus: "",
   });
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1400);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <FormSkeleton fields={10} showHeader={true} />;
+  }
 
   const openDialog = (type: string, item?: any) => {
     setDialogType(type);
