@@ -34,7 +34,8 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
 interface Assignment {
   id: string;
@@ -175,6 +176,7 @@ const dummyAssignments: Assignment[] = [
 ];
 
 const Assignments = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [assignments, setAssignments] =
     useState<Assignment[]>(dummyAssignments);
   const [searchTerm, setSearchTerm] = useState("");
@@ -182,6 +184,19 @@ const Assignments = () => {
   const [selectedAssignment, setSelectedAssignment] =
     useState<Assignment | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <CardGridSkeleton cards={8} showHeader={true} />;
+  }
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";

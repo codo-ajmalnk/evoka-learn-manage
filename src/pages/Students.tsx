@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 import {
   Dialog,
   DialogContent,
@@ -52,7 +53,7 @@ import {
   Trash2,
   User,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Dummy student data
 const dummyStudents = [
@@ -134,11 +135,25 @@ const dummyStudents = [
 ];
 
 const Students = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [students, setStudents] = useState(dummyStudents);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("all");
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <TableSkeleton title="Students" subtitle="Manage student information and records" />;
+  }
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =

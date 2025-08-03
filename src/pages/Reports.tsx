@@ -1,4 +1,5 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import { DashboardSkeleton } from '@/components/ui/skeletons/dashboard-skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -58,6 +59,7 @@ const recentActivities = [
 ];
 
 const Reports = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [fromDate, setFromDate] = useState<Date>(subDays(new Date(), 30));
   const [toDate, setToDate] = useState<Date>(new Date());
   const [reportType, setReportType] = useState('overview');
@@ -65,6 +67,19 @@ const Reports = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDateRange, setSelectedDateRange] = useState('30d');
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1600);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   // Professional-level analytics functions
   const handleExportReport = useCallback(async (type: string) => {

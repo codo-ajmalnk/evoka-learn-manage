@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { ProfileSkeleton } from '@/components/ui/skeletons/profile-skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -11,10 +12,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { User, Mail, Phone, MapPin, Calendar, Briefcase, GraduationCap, Camera, Save, Edit } from 'lucide-react';
 
 const Profile = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   
   // Get user data from localStorage
   const userData = JSON.parse(localStorage.getItem('user') || '{}');
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <ProfileSkeleton />;
+  }
   
   const [profile, setProfile] = useState({
     name: userData.name || 'John Doe',

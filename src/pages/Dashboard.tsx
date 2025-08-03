@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DashboardSkeleton } from "@/components/ui/skeletons/dashboard-skeleton";
 import { 
   Users, 
   GraduationCap, 
@@ -12,6 +13,7 @@ import {
   AlertCircle,
   Plus
 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 // Dummy data based on user role
 const getDashboardData = (role: string) => {
@@ -73,9 +75,23 @@ const getDashboardData = (role: string) => {
 };
 
 const Dashboard = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const role = user.role || "student";
   const data = getDashboardData(role);
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   const StatCard = ({ title, value, change, icon: Icon, variant = "default" }: any) => (
     <Card>

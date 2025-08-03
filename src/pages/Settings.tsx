@@ -39,7 +39,8 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { FormSkeleton } from "@/components/ui/skeletons/form-skeleton";
 
 // Type definitions
 interface Course {
@@ -238,11 +239,25 @@ const initialCoupons: Coupon[] = [
 ];
 
 const Settings = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [dialogType, setDialogType] = useState("");
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1400);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <FormSkeleton fields={10} showHeader={true} />;
+  }
 
   // State for all data
   const [coursesData, setCoursesData] = useState<Course[]>(initialCourses);

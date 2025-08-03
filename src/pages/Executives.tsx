@@ -25,7 +25,8 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 interface Executive {
   id: string;
@@ -174,6 +175,7 @@ const dummyExecutives: Executive[] = [
 ];
 
 const Executives = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [executives, setExecutives] = useState<Executive[]>(dummyExecutives);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -181,6 +183,19 @@ const Executives = () => {
     null
   );
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1100);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <TableSkeleton title="Executives Management" subtitle="Manage executive profiles and information" />;
+  }
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";

@@ -25,7 +25,8 @@ import {
   UserCheck,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 interface HRPerson {
   id: string;
@@ -176,11 +177,25 @@ const dummyHRPersons: HRPerson[] = [
 ];
 
 const HR = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [hrPersons, setHRPersons] = useState<HRPerson[]>(dummyHRPersons);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedHR, setSelectedHR] = useState<HRPerson | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 900);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <TableSkeleton title="HR Management" subtitle="Manage HR personnel and information" />;
+  }
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";

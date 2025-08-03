@@ -25,7 +25,8 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 interface Manager {
   id: string;
@@ -179,11 +180,25 @@ const dummyManagers: Manager[] = [
 ];
 
 const Managers = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [managers, setManagers] = useState<Manager[]>(dummyManagers);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedManager, setSelectedManager] = useState<Manager | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <TableSkeleton title="Managers Management" subtitle="Manage manager profiles and information" />;
+  }
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";

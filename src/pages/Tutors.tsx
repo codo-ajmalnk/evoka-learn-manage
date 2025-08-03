@@ -50,8 +50,9 @@ import {
   Users,
   UserX,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
+import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 interface Tutor {
   id: string;
@@ -242,6 +243,7 @@ const dummyTutors: Tutor[] = [
 ];
 
 const Tutors = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [tutors, setTutors] = useState<Tutor[]>(dummyTutors);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
@@ -253,6 +255,19 @@ const Tutors = () => {
   >(null);
   const { toast } = useToast();
   const form = useForm();
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1300);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <TableSkeleton title="Tutors" subtitle="Manage tutor profiles and information" />;
+  }
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { CardGridSkeleton } from '@/components/ui/skeletons/card-grid-skeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -57,6 +58,7 @@ const notifications = [
 ];
 
 const Notifications = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [notificationList, setNotificationList] = useState(notifications);
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
@@ -67,6 +69,19 @@ const Notifications = () => {
     leaveAlerts: true,
     systemAlerts: true
   });
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <CardGridSkeleton cards={5} columns={2} showHeader={true} />;
+  }
 
   const getNotificationIcon = (type: string) => {
     switch (type) {

@@ -43,7 +43,8 @@ import {
   UserX,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
 // Dummy data
 const attendanceRecords = [
@@ -103,10 +104,24 @@ const leaveRequests = [
 ];
 
 const Attendance = () => {
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <CardGridSkeleton cards={6} showHeader={true} />;
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
