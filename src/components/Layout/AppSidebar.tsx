@@ -297,58 +297,30 @@ export function AppSidebar() {
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
     isActive
-      ? "bg-primary/15 text-primary border-r-2 border-primary font-semibold shadow-sm"
-      : "text-muted-foreground hover:bg-accent/80 hover:text-foreground transition-all duration-200";
+      ? "bg-red-500/20 text-red-400 border-l-4 border-red-500 font-medium"
+      : "text-gray-300 hover:bg-gray-800/50 hover:text-white focus:bg-gray-800/50 focus:text-white";
 
   return (
     <Sidebar
       className={`${
-        collapsed ? "w-16" : "w-72"
-      } transition-all duration-300 ease-in-out border-r border-border/50 bg-card/80 backdrop-blur-xl min-h-screen flex-shrink-0 shadow-lg`}
+        collapsed ? "w-16" : "w-64"
+      } transition-all duration-200 ease-in-out border-r border-gray-700 bg-gray-900 min-h-screen flex-shrink-0 shadow-lg`}
       collapsible="offcanvas"
     >
-      <SidebarContent className="h-full flex flex-col bg-gradient-to-b from-card/90 to-card/70">
+      <SidebarContent className="h-full flex flex-col">
         {/* Brand Header */}
-        <div className="p-6 border-b border-border/30 flex-shrink-0">
+        <div className="p-4 border-b border-gray-700 flex-shrink-0">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg">
-              <img
-                src="/evoka-logo.png"
-                alt="Evoka Logo"
-                className="h-6 w-6 filter brightness-0 invert"
-              />
-            </div>
-            {!collapsed && (
-              <div className="flex flex-col">
-                <h1 className="text-xl font-bold text-foreground tracking-tight">Evoka</h1>
-                <p className="text-xs text-muted-foreground font-medium">Education Platform</p>
-              </div>
-            )}
+            <img
+              src="/evoka-logo.png"
+              alt="Evoka Logo"
+              className="h-8 w-auto"
+            />
           </div>
         </div>
-
-        {/* User Info Card */}
-        {!collapsed && (
-          <div className="p-4 mx-4 mt-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center text-primary-foreground font-semibold text-sm shadow-md">
-                {JSON.parse(localStorage.getItem("user") || "{}").name?.charAt(0) || "U"}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">
-                  {JSON.parse(localStorage.getItem("user") || "{}").name || "User"}
-                </p>
-                <p className="text-xs text-muted-foreground capitalize font-medium truncate">
-                  {JSON.parse(localStorage.getItem("user") || "{}").role || "user"}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Navigation Menu */}
         <nav
-          className="flex-1 p-4 space-y-2 overflow-y-auto"
+          className="flex-1 p-4 space-y-1 overflow-y-auto"
           role="navigation"
           aria-label="Main navigation"
         >
@@ -361,7 +333,7 @@ export function AppSidebar() {
                       <NavLink
                         to={item.url}
                         end
-                        className={`${getNavCls} group flex items-center gap-4 px-4 py-3 rounded-xl text-sm transition-all duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/50 focus:ring-offset-2 focus:ring-offset-background hover:scale-[1.02] hover:shadow-sm`}
+                        className={`${getNavCls} group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2`}
                         aria-label={
                           item.description
                             ? `${item.title} - ${item.description}`
@@ -369,23 +341,14 @@ export function AppSidebar() {
                         }
                         title={item.description}
                       >
-                        <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-accent/50 group-hover:bg-primary/10 transition-colors duration-200">
-                          <item.icon
-                            className="h-4 w-4 flex-shrink-0"
-                            aria-hidden="true"
-                          />
-                        </div>
+                        <item.icon
+                          className="h-5 w-5 flex-shrink-0"
+                          aria-hidden="true"
+                        />
                         {!collapsed && (
-                          <div className="flex-1 min-w-0">
-                            <span className="font-medium truncate block">
-                              {item.title}
-                            </span>
-                            {item.description && (
-                              <span className="text-xs text-muted-foreground truncate block mt-0.5">
-                                {item.description}
-                              </span>
-                            )}
-                          </div>
+                          <span className="font-medium truncate">
+                            {item.title}
+                          </span>
                         )}
                       </NavLink>
                     </SidebarMenuButton>
@@ -395,20 +358,6 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </nav>
-
-        {/* Footer */}
-        {!collapsed && (
-          <div className="p-4 border-t border-border/30">
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground font-medium">
-                © 2024 Evoka Platform
-              </p>
-              <p className="text-xs text-muted-foreground/70 mt-1">
-                v1.0.0
-              </p>
-            </div>
-          </div>
-        )}
       </SidebarContent>
     </Sidebar>
   );
