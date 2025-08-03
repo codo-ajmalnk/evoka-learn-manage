@@ -56,129 +56,154 @@ const Profile = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-          <p className="text-muted-foreground">Manage your personal information and settings</p>
+    <div className="min-h-screen bg-background p-6">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Header Section */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+            <p className="text-muted-foreground mt-1">Manage your personal information and settings</p>
+          </div>
+          <Button 
+            onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+            size="lg"
+          >
+            {isEditing ? (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Save Changes
+              </>
+            ) : (
+              <>
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Profile
+              </>
+            )}
+          </Button>
         </div>
-        <Button 
-          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
-          className="bg-primary text-primary-foreground"
-        >
-          {isEditing ? (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </>
-          ) : (
-            <>
-              <Edit className="w-4 h-4 mr-2" />
-              Edit Profile
-            </>
-          )}
-        </Button>
-      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Profile Summary Card */}
-        <Card className="lg:col-span-1">
-          <CardHeader className="text-center">
-            <div className="relative mx-auto w-24 h-24 mb-4">
-              <Avatar className="w-24 h-24">
-                <AvatarImage src="/placeholder.svg" alt={profile.name} />
-                <AvatarFallback className="text-lg">
-                  {profile.name.split(' ').map(n => n[0]).join('')}
-                </AvatarFallback>
-              </Avatar>
-              {isEditing && (
-                <Button size="sm" className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0">
-                  <Camera className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-            <CardTitle className="text-xl">{profile.name}</CardTitle>
-            <CardDescription className="flex items-center justify-center space-x-2">
-              <Badge variant="secondary">{profile.role}</Badge>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center space-x-2 text-sm">
-              <Mail className="w-4 h-4 text-muted-foreground" />
-              <span>{profile.email}</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm">
-              <Phone className="w-4 h-4 text-muted-foreground" />
-              <span>{profile.phone}</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Bangalore, Karnataka</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Joined {profile.joiningDate}</span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
+          {/* Profile Summary Card */}
+          <div className="xl:col-span-1">
+            <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+              <CardContent className="p-8">
+                <div className="text-center space-y-6">
+                  <div className="relative mx-auto w-32 h-32">
+                    <Avatar className="w-32 h-32 shadow-xl border-4 border-background">
+                      <AvatarImage src="/placeholder.svg" alt={profile.name} />
+                      <AvatarFallback className="text-2xl font-semibold bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+                        {profile.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    {isEditing && (
+                      <Button size="sm" className="absolute -bottom-2 -right-2 rounded-full w-10 h-10 p-0 shadow-lg">
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <h2 className="text-2xl font-bold text-foreground">{profile.name}</h2>
+                    <Badge variant="secondary" className="text-sm px-3 py-1">
+                      {profile.role}
+                    </Badge>
+                  </div>
 
-        {/* Profile Details */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="personal" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="personal">Personal Details</TabsTrigger>
-                <TabsTrigger value="professional">Professional Details</TabsTrigger>
-                <TabsTrigger value="security">Security Settings</TabsTrigger>
-              </TabsList>
+                  <div className="space-y-4 pt-4 border-t border-border/50">
+                    <div className="flex items-center space-x-3 text-sm group">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <Mail className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                      </div>
+                      <span className="text-foreground font-medium">{profile.email}</span>
+                    </div>
+                    <div className="flex items-center space-x-3 text-sm group">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <Phone className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                      </div>
+                      <span className="text-foreground font-medium">{profile.phone}</span>
+                    </div>
+                    <div className="flex items-center space-x-3 text-sm group">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <MapPin className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                      </div>
+                      <span className="text-muted-foreground">Bangalore, Karnataka</span>
+                    </div>
+                    <div className="flex items-center space-x-3 text-sm group">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <Calendar className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
+                      </div>
+                      <span className="text-muted-foreground">Joined {profile.joiningDate}</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-              <TabsContent value="personal" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+          {/* Profile Details */}
+          <div className="xl:col-span-3">
+            <Card className="border-0 shadow-lg bg-card/50 backdrop-blur-sm">
+              <CardHeader className="pb-6">
+                <CardTitle className="text-xl font-semibold">Profile Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="personal" className="space-y-6">
+                  <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+                    <TabsTrigger value="personal" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Personal Details</TabsTrigger>
+                    <TabsTrigger value="professional" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Professional Details</TabsTrigger>
+                    <TabsTrigger value="security" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">Security Settings</TabsTrigger>
+                  </TabsList>
+
+              <TabsContent value="personal" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="name" className="text-sm font-medium">Full Name</Label>
                     <Input
                       id="name"
                       value={profile.name}
                       onChange={(e) => setProfile({...profile, name: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
                     <Input
                       id="email"
                       type="email"
                       value={profile.email}
                       onChange={(e) => setProfile({...profile, email: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="phone" className="text-sm font-medium">Phone Number</Label>
                     <Input
                       id="phone"
                       value={profile.phone}
                       onChange={(e) => setProfile({...profile, phone: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="dateOfBirth" className="text-sm font-medium">Date of Birth</Label>
                     <Input
                       id="dateOfBirth"
                       type="date"
                       value={profile.dateOfBirth}
                       onChange={(e) => setProfile({...profile, dateOfBirth: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="gender">Gender</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="gender" className="text-sm font-medium">Gender</Label>
                     <Select value={profile.gender} onValueChange={(value) => setProfile({...profile, gender: value})} disabled={!isEditing}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -188,10 +213,10 @@ const Profile = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="bloodGroup">Blood Group</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="bloodGroup" className="text-sm font-medium">Blood Group</Label>
                     <Select value={profile.bloodGroup} onValueChange={(value) => setProfile({...profile, bloodGroup: value})} disabled={!isEditing}>
-                      <SelectTrigger>
+                      <SelectTrigger className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -206,28 +231,30 @@ const Profile = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="emergencyContact">Emergency Contact</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="emergencyContact" className="text-sm font-medium">Emergency Contact</Label>
                     <Input
                       id="emergencyContact"
                       value={profile.emergencyContact}
                       onChange={(e) => setProfile({...profile, emergencyContact: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="address" className="text-sm font-medium">Address</Label>
                   <Textarea
                     id="address"
                     value={profile.address}
                     onChange={(e) => setProfile({...profile, address: e.target.value})}
                     disabled={!isEditing}
                     rows={3}
+                    className="border-0 bg-muted/50 focus:bg-background transition-colors resize-none"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bio">Bio</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="bio" className="text-sm font-medium">Bio</Label>
                   <Textarea
                     id="bio"
                     value={profile.bio}
@@ -235,85 +262,107 @@ const Profile = () => {
                     disabled={!isEditing}
                     rows={4}
                     placeholder="Tell us about yourself..."
+                    className="border-0 bg-muted/50 focus:bg-background transition-colors resize-none"
                   />
                 </div>
               </TabsContent>
 
-              <TabsContent value="professional" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="role">Role</Label>
+              <TabsContent value="professional" className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label htmlFor="role" className="text-sm font-medium">Role</Label>
                     <Input
                       id="role"
                       value={profile.role}
                       disabled={true}
+                      className="h-11 border-0 bg-muted/30 text-muted-foreground"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="department">Department</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="department" className="text-sm font-medium">Department</Label>
                     <Input
                       id="department"
                       value={profile.department}
                       onChange={(e) => setProfile({...profile, department: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="qualification">Qualification</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="qualification" className="text-sm font-medium">Qualification</Label>
                     <Input
                       id="qualification"
                       value={profile.qualification}
                       onChange={(e) => setProfile({...profile, qualification: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="experience">Experience</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="experience" className="text-sm font-medium">Experience</Label>
                     <Input
                       id="experience"
                       value={profile.experience}
                       onChange={(e) => setProfile({...profile, experience: e.target.value})}
                       disabled={!isEditing}
+                      className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="joiningDate">Joining Date</Label>
+                  <div className="space-y-3">
+                    <Label htmlFor="joiningDate" className="text-sm font-medium">Joining Date</Label>
                     <Input
                       id="joiningDate"
                       type="date"
                       value={profile.joiningDate}
                       disabled={true}
+                      className="h-11 border-0 bg-muted/30 text-muted-foreground"
                     />
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="security" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Change Password</CardTitle>
+              <TabsContent value="security" className="space-y-6">
+                <Card className="border-0 shadow-md bg-card/50">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-semibold">Change Password</CardTitle>
                     <CardDescription>Update your password to keep your account secure</CardDescription>
                   </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="currentPassword">Current Password</Label>
-                      <Input id="currentPassword" type="password" />
+                  <CardContent className="space-y-6">
+                    <div className="space-y-3">
+                      <Label htmlFor="currentPassword" className="text-sm font-medium">Current Password</Label>
+                      <Input 
+                        id="currentPassword" 
+                        type="password" 
+                        className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="newPassword">New Password</Label>
-                      <Input id="newPassword" type="password" />
+                    <div className="space-y-3">
+                      <Label htmlFor="newPassword" className="text-sm font-medium">New Password</Label>
+                      <Input 
+                        id="newPassword" 
+                        type="password" 
+                        className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
+                      />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                      <Input id="confirmPassword" type="password" />
+                    <div className="space-y-3">
+                      <Label htmlFor="confirmPassword" className="text-sm font-medium">Confirm New Password</Label>
+                      <Input 
+                        id="confirmPassword" 
+                        type="password" 
+                        className="h-11 border-0 bg-muted/50 focus:bg-background transition-colors"
+                      />
                     </div>
-                    <Button className="w-full">Update Password</Button>
+                    <Button className="w-full h-11 bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm">
+                      Update Password
+                    </Button>
                   </CardContent>
                 </Card>
               </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
+                </Tabs>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
