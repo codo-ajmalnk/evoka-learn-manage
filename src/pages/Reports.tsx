@@ -68,20 +68,7 @@ const Reports = () => {
   const [selectedDateRange, setSelectedDateRange] = useState('30d');
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1600);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  if (isLoading) {
-    return <DashboardSkeleton />;
-  }
-
-  // Professional-level analytics functions
+  // Professional-level analytics functions - moved before conditional return
   const handleExportReport = useCallback(async (type: string) => {
     setRefreshing(true);
     try {
@@ -183,6 +170,19 @@ const Reports = () => {
       minimumFractionDigits: 0,
     }).format(amount);
   };
+
+  useEffect(() => {
+    // Simulate loading time
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1600);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
