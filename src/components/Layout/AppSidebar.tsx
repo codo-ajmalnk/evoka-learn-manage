@@ -310,7 +310,7 @@ export function AppSidebar() {
       <SidebarContent className="h-full flex flex-col">
         {/* Brand Header */}
         <div className="p-6 border-b border-border/30 flex-shrink-0 bg-gradient-to-r from-primary/5 to-secondary/5">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center w-full">
             <div className="p-2 rounded-xl bg-primary/10 shadow-sm">
               <img
                 src="/evoka-logo.png"
@@ -318,14 +318,6 @@ export function AppSidebar() {
                 className="h-6 w-auto"
               />
             </div>
-            {!collapsed && (
-              <div className="flex flex-col">
-                <h1 className="text-lg font-bold text-foreground">Evoka</h1>
-                <p className="text-xs text-muted-foreground font-medium">
-                  Learn & Manage
-                </p>
-              </div>
-            )}
           </div>
         </div>
 

@@ -139,7 +139,7 @@ const Students = () => {
   const [students, setStudents] = useState(dummyStudents);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStudent, setSelectedStudent] = useState<any>(null);
-  const [activeTab, setActiveTab] = useState("all");
+  const [activeFilter, setActiveFilter] = useState("all");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -155,18 +155,22 @@ const Students = () => {
     return <TableSkeleton title="Students" subtitle="Manage student information and records" />;
   }
 
+  // Get unique batches from students
+  const uniqueBatches = [...new Set(students.map(student => student.batch))];
+
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       `${student.firstName} ${student.lastName} ${student.email} ${student.id}`
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
 
-    const matchesTab =
-      activeTab === "all" ||
-      (activeTab === "active" && student.status === "Active") ||
-      (activeTab === "inactive" && student.status === "Inactive");
+    const matchesFilter =
+      activeFilter === "all" ||
+      (activeFilter === "active" && student.status === "Active") ||
+      (activeFilter === "inactive" && student.status === "Inactive") ||
+      (activeFilter === student.batch);
 
-    return matchesSearch && matchesTab;
+    return matchesSearch && matchesFilter;
   });
 
   const handleEdit = (student: any) => {
@@ -546,18 +550,22 @@ const Students = () => {
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
-            <TabsList>
-              <TabsTrigger value="all">
+          <Tabs value={activeFilter} onValueChange={setActiveFilter} className="mt-4">
+            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-none lg:flex lg:flex-wrap gap-2">
+              <TabsTrigger value="all" className="flex-1 lg:flex-none">
                 All Students ({students.length})
               </TabsTrigger>
-              <TabsTrigger value="active">
+              <TabsTrigger value="active" className="flex-1 lg:flex-none">
                 Active ({students.filter((s) => s.status === "Active").length})
               </TabsTrigger>
-              <TabsTrigger value="inactive">
-                Inactive (
-                {students.filter((s) => s.status === "Inactive").length})
+              <TabsTrigger value="inactive" className="flex-1 lg:flex-none">
+                Inactive ({students.filter((s) => s.status === "Inactive").length})
               </TabsTrigger>
+              {uniqueBatches.map((batch) => (
+                <TabsTrigger key={batch} value={batch} className="flex-1 lg:flex-none">
+                  {batch} ({students.filter((s) => s.batch === batch).length})
+                </TabsTrigger>
+              ))}
             </TabsList>
           </Tabs>
         </CardHeader>
