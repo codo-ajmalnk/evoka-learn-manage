@@ -34,8 +34,95 @@ import {
   Star,
   Trash2,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
 import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
+
+// Lazy load components for better performance
+const LazyAssignmentDetailsDialog = lazy(() => import('./AssignmentDetailsDialog.tsx'));
+const LazyAddAssignmentDialog = lazy(() => import('./AddAssignmentDialog.tsx'));
+
+// Simple debounce hook implementation
+const useDebounce = (value: any, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+// Simple throttle hook implementation
+const useThrottle = (callback: Function, delay: number) => {
+  const lastRun = useRef<number>(0);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  return useCallback(
+    (...args: any[]) => {
+      const now = Date.now();
+
+      if (now - lastRun.current >= delay) {
+        callback(...args);
+        lastRun.current = now;
+      } else {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          callback(...args);
+          lastRun.current = Date.now();
+        }, delay - (now - lastRun.current));
+      }
+    },
+    [callback, delay]
+  );
+};
+
+// Simple virtual scrolling hook
+const useVirtualScrolling = (items: any[], itemHeight: number, containerHeight: number, overscan: number = 5) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const totalHeight = items.length * itemHeight;
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+  const endIndex = Math.min(
+    items.length - 1,
+    Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
+  );
+
+  const visibleItems = items.slice(startIndex, endIndex + 1);
+  const offsetY = startIndex * itemHeight;
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return {
+    containerRef,
+    totalHeight,
+    visibleItems,
+    offsetY,
+    handleScroll,
+    startIndex,
+    endIndex,
+  };
+};
+
+// Simple performance logger
+const performanceLogger = {
+  logRender: (time: number) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Assignments render time: ${time.toFixed(2)}ms`);
+    }
+  }
+};
 
 interface Assignment {
   id: string;
@@ -66,176 +153,472 @@ interface Assignment {
   feedback?: string;
 }
 
-const dummyAssignments: Assignment[] = [
-  {
-    id: "ASG001",
-    title: "Brand Identity Design Project",
-    description:
-      "Create a complete brand identity package including logo, color palette, typography, and brand guidelines for a fictional startup.",
-    category: "Design",
-    status: "graded",
-    dateCreated: "2025-11-01",
-    dueDate: "2025-11-15",
-    submissionDate: "2025-11-14",
-    grade: 85,
-    maxGrade: 100,
-    stars: 4,
-    maxStars: 5,
-    studentId: "STU001",
-    studentName: "Rahul Sharma",
-    batchId: "ADV001",
-    batchName: "Advanced Advertising",
-    tutorId: "TUT001",
-    tutorName: "Rajesh Kumar",
-    attachments: ["assignment_brief.pdf", "reference_materials.zip"],
-    submissions: [
-      {
-        id: "SUB001",
-        fileName: "brand_identity_final.zip",
-        submittedAt: "2025-11-14T10:30:00Z",
-        size: "15.2 MB",
-      },
-    ],
-    feedback:
-      "Excellent work on the brand identity. The color palette is well thought out and the logo design is creative. Consider improving the typography hierarchy in the guidelines.",
-  },
-  {
-    id: "ASG002",
-    title: "Social Media Campaign Strategy",
-    description:
-      "Develop a comprehensive social media marketing strategy for a product launch including platform selection, content calendar, and engagement tactics.",
-    category: "Marketing",
-    status: "submitted",
-    dateCreated: "2025-11-05",
-    dueDate: "2025-11-20",
-    submissionDate: "2025-11-18",
-    grade: 0,
-    maxGrade: 100,
-    stars: 0,
-    maxStars: 5,
-    studentId: "STU002",
-    studentName: "Priya Patel",
-    batchId: "MKT001",
-    batchName: "Digital Marketing",
-    tutorId: "TUT002",
-    tutorName: "Priya Sharma",
-    attachments: ["campaign_template.xlsx", "platform_guidelines.pdf"],
-    submissions: [
-      {
-        id: "SUB002",
-        fileName: "social_media_strategy.pptx",
-        submittedAt: "2025-11-18T14:15:00Z",
-        size: "8.7 MB",
-      },
-    ],
-  },
-  {
-    id: "ASG003",
-    title: "Print Advertisement Layout",
-    description:
-      "Design a print advertisement for a magazine spread including headline, body copy, images, and call-to-action.",
-    category: "Design",
-    status: "pending",
-    dateCreated: "2025-11-10",
-    dueDate: "2025-11-25",
-    grade: 0,
-    maxGrade: 100,
-    stars: 0,
-    maxStars: 5,
-    studentId: "STU003",
-    studentName: "Arun Reddy",
-    batchId: "ADV001",
-    batchName: "Advanced Advertising",
-    tutorId: "TUT001",
-    tutorName: "Rajesh Kumar",
-    attachments: ["ad_specifications.pdf", "brand_assets.zip"],
-    submissions: [],
-  },
-  {
-    id: "ASG004",
-    title: "Consumer Behavior Analysis",
-    description:
-      "Conduct research and analysis on consumer behavior patterns for a specific demographic and present findings with recommendations.",
-    category: "Research",
-    status: "overdue",
-    dateCreated: "2025-10-20",
-    dueDate: "2025-11-05",
-    grade: 0,
-    maxGrade: 100,
-    stars: 0,
-    maxStars: 5,
-    studentId: "STU004",
-    studentName: "Sneha Joshi",
-    batchId: "MKT001",
-    batchName: "Digital Marketing",
-    tutorId: "TUT002",
-    tutorName: "Priya Sharma",
-    attachments: ["research_methodology.pdf", "survey_template.docx"],
-    submissions: [],
-  },
-];
+// Memoized assignment data with caching
+const getDummyAssignments = (() => {
+  let cachedAssignments: Assignment[] | null = null;
+  let cacheTime = 0;
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  return () => {
+    const now = Date.now();
+    if (cachedAssignments && (now - cacheTime) < CACHE_DURATION) {
+      return cachedAssignments;
+    }
+
+    // Generate large dataset for testing
+    const assignments = Array.from({ length: 1000 }, (_, index) => {
+      const categories = ["Design", "Marketing", "Research", "Development", "Content"];
+      const statuses: ("pending" | "submitted" | "graded" | "overdue")[] = ["pending", "submitted", "graded", "overdue"];
+      const category = categories[Math.floor(Math.random() * categories.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      
+      const assignment: Assignment = {
+        id: `ASG${String(index + 1).padStart(3, '0')}`,
+        title: `Assignment ${index + 1}: ${category} Project`,
+        description: `This is a comprehensive ${category.toLowerCase()} assignment that requires students to demonstrate their skills and knowledge in the field.`,
+        category,
+        status,
+        dateCreated: `2025-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+        dueDate: `2025-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+        maxGrade: 100,
+        maxStars: 5,
+        studentId: `STU${String(Math.floor(Math.random() * 100) + 1).padStart(3, '0')}`,
+        studentName: `Student ${Math.floor(Math.random() * 100) + 1}`,
+        batchId: `BAT${String(Math.floor(Math.random() * 10) + 1).padStart(3, '0')}`,
+        batchName: `Batch ${Math.floor(Math.random() * 10) + 1}`,
+        tutorId: `TUT${String(Math.floor(Math.random() * 20) + 1).padStart(3, '0')}`,
+        tutorName: `Tutor ${Math.floor(Math.random() * 20) + 1}`,
+        attachments: Math.random() > 0.3 ? [`assignment_${index + 1}.pdf`] : [],
+        submissions: Math.random() > 0.5 ? [{
+          id: `SUB${index + 1}`,
+          fileName: `submission_${index + 1}.zip`,
+          submittedAt: new Date().toISOString(),
+          size: `${Math.floor(Math.random() * 50) + 1} MB`
+        }] : [],
+      };
+
+      // Add submission date if submitted or graded
+      if (status === "submitted" || status === "graded") {
+        assignment.submissionDate = assignment.dueDate;
+      }
+
+      // Add grade and stars if graded
+      if (status === "graded") {
+        assignment.grade = Math.floor(Math.random() * 40) + 60; // 60-100
+        assignment.stars = Math.floor(Math.random() * 3) + 3; // 3-5
+        assignment.feedback = "Good work! Keep improving your skills.";
+      }
+
+      return assignment;
+    });
+
+    cachedAssignments = assignments;
+    cacheTime = now;
+    return assignments;
+  };
+})();
+
+// Memoized assignment row component
+const AssignmentRow = memo(({ 
+  assignment, 
+  onEdit, 
+  onDelete, 
+  onView,
+  selectedAssignment,
+  setSelectedAssignment,
+  userRole
+}: { 
+  assignment: Assignment; 
+  onEdit: (assignment: Assignment) => void; 
+  onDelete: (id: string) => void;
+  onView: (assignment: Assignment) => void;
+  selectedAssignment: Assignment | null;
+  setSelectedAssignment: (assignment: Assignment | null) => void;
+  userRole: string;
+}) => {
+  const handleView = useCallback(() => {
+    setSelectedAssignment(assignment);
+    onView(assignment);
+  }, [assignment, setSelectedAssignment, onView]);
+
+  const handleEdit = useCallback(() => {
+    onEdit(assignment);
+  }, [assignment, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(assignment.id);
+  }, [assignment.id, onDelete]);
+
+  const getStatusColor = useCallback((status: string) => {
+    switch (status) {
+      case "pending":
+        return "warning";
+      case "submitted":
+        return "info";
+      case "graded":
+        return "success";
+      case "overdue":
+        return "destructive";
+      default:
+        return "secondary";
+    }
+  }, []);
+
+  const getProgressValue = useCallback((assignment: Assignment) => {
+    if (assignment.status === "pending") return 25;
+    if (assignment.status === "submitted") return 75;
+    if (assignment.status === "graded") return 100;
+    if (assignment.status === "overdue") return 10;
+    return 0;
+  }, []);
+
+  return (
+    <tr className="border-b hover:bg-muted/50">
+      <td className="p-2">
+          <div>
+          <p className="font-medium">{assignment.title}</p>
+            <p className="text-sm text-muted-foreground">
+            {assignment.id}
+            </p>
+          </div>
+      </td>
+      <td className="p-2">
+              <div className="flex items-center gap-2">
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>
+                    {assignment.studentName
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm font-medium">
+                    {assignment.studentName}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+              {assignment.batchName}
+                  </p>
+                </div>
+              </div>
+      </td>
+      <td className="p-2">
+              <Badge variant="secondary">{assignment.category}</Badge>
+      </td>
+      <td className="p-2">
+        <div>
+              <p className="text-sm">{assignment.dueDate}</p>
+          {assignment.status === "overdue" && (
+            <p className="text-xs text-destructive">Overdue</p>
+          )}
+            </div>
+      </td>
+      <td className="p-2">
+            <Badge variant={getStatusColor(assignment.status)}>
+          {assignment.status}
+            </Badge>
+      </td>
+      <td className="p-2">
+        {assignment.grade !== undefined ? (
+                  <div className="flex items-center gap-2">
+            <span className="font-medium">
+              {assignment.grade}/{assignment.maxGrade}
+                    </span>
+            <div className="flex">
+              {Array.from(
+                { length: assignment.maxStars },
+                (_, i) => (
+                      <Star
+                        key={i}
+                    className={`h-3 w-3 ${
+                          i < (assignment.stars || 0)
+                            ? "text-yellow-500 fill-yellow-500"
+                            : "text-gray-300"
+                        }`}
+                      />
+                )
+              )}
+                  </div>
+                </div>
+        ) : (
+          <span className="text-muted-foreground">-</span>
+        )}
+      </td>
+      <td className="p-2">
+        <div className="w-20">
+          <Progress
+            value={getProgressValue(assignment)}
+            className="h-2"
+          />
+              </div>
+      </td>
+      <td className="p-2">
+        <div className="flex items-center gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleView}
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </DialogTrigger>
+            {selectedAssignment && (
+              <Suspense fallback={<div>Loading...</div>}>
+                <LazyAssignmentDetailsDialog assignment={selectedAssignment} />
+              </Suspense>
+            )}
+          </Dialog>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleEdit}
+          >
+            <Edit className="h-4 w-4" />
+          </Button>
+          {(userRole === "admin" || userRole === "tutor") && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+              )}
+            </div>
+      </td>
+    </tr>
+  );
+});
+
+AssignmentRow.displayName = "AssignmentRow";
+
+// Memoized search component
+const SearchComponent = memo(({ 
+  searchTerm, 
+  onSearchChange 
+}: { 
+  searchTerm: string; 
+  onSearchChange: (value: string) => void; 
+}) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  }, [onSearchChange]);
+
+  return (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+        placeholder="Search assignments..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        className="pl-10 w-full sm:w-64"
+                  />
+                </div>
+  );
+});
+
+SearchComponent.displayName = "SearchComponent";
+
+// Memoized filter tabs component
+const FilterTabs = memo(({ 
+  activeTab, 
+  onTabChange, 
+  assignments 
+}: { 
+  activeTab: string; 
+  onTabChange: (value: string) => void; 
+  assignments: Assignment[];
+}) => {
+  return (
+    <div className="flex gap-2 mb-4 overflow-x-auto">
+              <Button
+        variant={activeTab === "all" ? "default" : "outline"}
+        size="sm"
+        onClick={() => onTabChange("all")}
+      >
+        All ({assignments.length})
+      </Button>
+      <Button
+        variant={activeTab === "pending" ? "default" : "outline"}
+        size="sm"
+        onClick={() => onTabChange("pending")}
+      >
+        Pending ({assignments.filter((a) => a.status === "pending").length})
+      </Button>
+      <Button
+        variant={activeTab === "submitted" ? "default" : "outline"}
+        size="sm"
+        onClick={() => onTabChange("submitted")}
+      >
+        Submitted ({assignments.filter((a) => a.status === "submitted").length})
+      </Button>
+      <Button
+        variant={activeTab === "graded" ? "default" : "outline"}
+        size="sm"
+        onClick={() => onTabChange("graded")}
+      >
+        Graded ({assignments.filter((a) => a.status === "graded").length})
+      </Button>
+      <Button
+        variant={activeTab === "overdue" ? "default" : "outline"}
+        size="sm"
+        onClick={() => onTabChange("overdue")}
+      >
+        Overdue ({assignments.filter((a) => a.status === "overdue").length})
+              </Button>
+            </div>
+  );
+});
+
+FilterTabs.displayName = "FilterTabs";
+
+// Virtual table component for large datasets
+const VirtualTable = memo(({ 
+  assignments, 
+  onEdit, 
+  onDelete, 
+  onView,
+  selectedAssignment,
+  setSelectedAssignment,
+  userRole
+}: { 
+  assignments: Assignment[];
+  onEdit: (assignment: Assignment) => void;
+  onDelete: (id: string) => void;
+  onView: (assignment: Assignment) => void;
+  selectedAssignment: Assignment | null;
+  setSelectedAssignment: (assignment: Assignment | null) => void;
+  userRole: string;
+}) => {
+  const ITEM_HEIGHT = 80; // Approximate height of each row
+  const CONTAINER_HEIGHT = 600; // Height of the table container
+
+  const { 
+    visibleItems, 
+    containerRef, 
+    totalHeight, 
+    offsetY, 
+    handleScroll 
+  } = useVirtualScrolling(assignments, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
+
+  return (
+    <div 
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="overflow-auto"
+      style={{ height: CONTAINER_HEIGHT }}
+    >
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        <div style={{ transform: `translateY(${offsetY}px)` }}>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left p-2">Assignment</th>
+                <th className="text-left p-2">Student</th>
+                <th className="text-left p-2">Category</th>
+                <th className="text-left p-2">Due Date</th>
+                <th className="text-left p-2">Status</th>
+                <th className="text-left p-2">Grade</th>
+                <th className="text-left p-2">Progress</th>
+                <th className="text-left p-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleItems.map((assignment) => (
+                <AssignmentRow
+                  key={assignment.id}
+                  assignment={assignment}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onView={onView}
+                  selectedAssignment={selectedAssignment}
+                  setSelectedAssignment={setSelectedAssignment}
+                  userRole={userRole}
+                />
+              ))}
+            </tbody>
+          </table>
+                  </div>
+                </div>
+          </div>
+  );
+});
+
+VirtualTable.displayName = "VirtualTable";
 
 const Assignments = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [assignments, setAssignments] =
-    useState<Assignment[]>(dummyAssignments);
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedAssignment, setSelectedAssignment] =
-    useState<Assignment | null>(null);
+  const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  // Performance monitoring
   useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1100);
+    performanceLogger.logRender(performance.now());
+  });
 
-    return () => clearTimeout(timer);
-  }, []);
+  // Debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  if (isLoading) {
-    return <CardGridSkeleton cards={8} showHeader={true} />;
-  }
-
+  // Get user role
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";
 
-  const filteredAssignments = assignments.filter((assignment) => {
-    const matchesSearch =
-      `${assignment.title} ${assignment.studentName} ${assignment.category} ${assignment.id}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  // Memoized filtered assignments
+  const filteredAssignments = useMemo(() => {
+    const startTime = performance.now();
+    
+    let filtered = assignments.filter((assignment) => {
+      const matchesSearch =
+        `${assignment.title} ${assignment.studentName} ${assignment.category} ${assignment.id}`
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase());
 
-    if (activeTab === "all") return matchesSearch;
-    if (activeTab === "pending")
-      return matchesSearch && assignment.status === "pending";
-    if (activeTab === "submitted")
-      return matchesSearch && assignment.status === "submitted";
-    if (activeTab === "graded")
-      return matchesSearch && assignment.status === "graded";
-    if (activeTab === "overdue")
-      return matchesSearch && assignment.status === "overdue";
+      if (activeTab === "all") return matchesSearch;
+      if (activeTab === "pending")
+        return matchesSearch && assignment.status === "pending";
+      if (activeTab === "submitted")
+        return matchesSearch && assignment.status === "submitted";
+      if (activeTab === "graded")
+        return matchesSearch && assignment.status === "graded";
+      if (activeTab === "overdue")
+        return matchesSearch && assignment.status === "overdue";
 
-    return matchesSearch;
-  });
+      return matchesSearch;
+    });
 
-  const handleEdit = (assignment: Assignment) => {
+    const endTime = performance.now();
+    performanceLogger.logRender(endTime - startTime);
+
+    return filtered;
+  }, [assignments, debouncedSearchTerm, activeTab]);
+
+  // Throttled handlers
+  const handleEdit = useThrottle((assignment: Assignment) => {
     toast({
       title: "Edit Assignment",
       description: `Editing assignment: ${assignment.title}`,
     });
-  };
+  }, 300);
 
-  const handleDelete = (id: string) => {
+  const handleDelete = useThrottle((id: string) => {
     setAssignments(assignments.filter((assignment) => assignment.id !== id));
     toast({
       title: "Assignment Deleted",
       description: "Assignment has been successfully deleted.",
     });
-  };
+  }, 300);
 
-  const handleGradeSubmission = (
+  const handleView = useThrottle((assignment: Assignment) => {
+    // View logic here
+  }, 300);
+
+  const handleGradeSubmission = useThrottle((
     assignmentId: string,
     grade: number,
     stars: number,
@@ -252,360 +635,62 @@ const Assignments = () => {
       title: "Assignment Graded",
       description: "Grade and feedback have been submitted successfully.",
     });
-  };
+  }, 300);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "pending":
-        return "warning";
-      case "submitted":
-        return "info";
-      case "graded":
-        return "success";
-      case "overdue":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
+  // Initialize data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1100));
+        const data = getDummyAssignments();
+        setAssignments(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading assignments:', error);
+        setIsLoading(false);
+      }
+    };
 
-  const getProgressValue = (assignment: Assignment) => {
-    if (assignment.status === "pending") return 25;
-    if (assignment.status === "submitted") return 75;
-    if (assignment.status === "graded") return 100;
-    if (assignment.status === "overdue") return 10;
-    return 0;
-  };
+    loadData();
+  }, []);
 
-  const AssignmentDetailsDialog = ({
-    assignment,
-  }: {
-    assignment: Assignment;
-  }) => (
-    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <FileText className="h-6 w-6 text-primary" />
-          </div>
-          <div>
-            <h3 className="text-xl font-semibold">{assignment.title}</h3>
-            <p className="text-sm text-muted-foreground">
-              {assignment.id} • {assignment.category}
-            </p>
-          </div>
-        </DialogTitle>
-      </DialogHeader>
+  // Handle search change
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value);
+  }, []);
 
-      <Tabs defaultValue="details" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="details">Details</TabsTrigger>
-          <TabsTrigger value="submission">Submission</TabsTrigger>
-          <TabsTrigger value="grading">Grading</TabsTrigger>
-          <TabsTrigger value="progress">Progress</TabsTrigger>
-        </TabsList>
+  // Handle tab change
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+  }, []);
 
-        <TabsContent value="details" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Student</Label>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>
-                    {assignment.studentName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">
-                    {assignment.studentName}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {assignment.studentId}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Tutor</Label>
-              <div className="flex items-center gap-2">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback>
-                    {assignment.tutorName
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <p className="text-sm font-medium">{assignment.tutorName}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {assignment.tutorId}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label>Batch</Label>
-              <Badge variant="outline">
-                {assignment.batchName} ({assignment.batchId})
-              </Badge>
-            </div>
-            <div className="space-y-2">
-              <Label>Category</Label>
-              <Badge variant="secondary">{assignment.category}</Badge>
-            </div>
-            <div className="space-y-2">
-              <Label>Created Date</Label>
-              <p className="text-sm">{assignment.dateCreated}</p>
-            </div>
-            <div className="space-y-2">
-              <Label>Due Date</Label>
-              <p className="text-sm">{assignment.dueDate}</p>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Description</Label>
-            <p className="text-sm bg-muted p-3 rounded">
-              {assignment.description}
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Attachments</Label>
-            <div className="flex flex-wrap gap-2">
-              {assignment.attachments.map((file, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="cursor-pointer hover:bg-muted"
-                >
-                  {file}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="submission" className="space-y-4">
-          <div className="space-y-2">
-            <Label>Status</Label>
-            <Badge variant={getStatusColor(assignment.status)}>
-              {assignment.status.toUpperCase()}
-            </Badge>
-          </div>
-
-          {assignment.submissionDate && (
-            <div className="space-y-2">
-              <Label>Submission Date</Label>
-              <p className="text-sm">{assignment.submissionDate}</p>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Submitted Files</Label>
-            {assignment.submissions.length > 0 ? (
-              <div className="space-y-2">
-                {assignment.submissions.map((submission) => (
-                  <Card key={submission.id}>
-                    <CardContent className="p-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{submission.fileName}</p>
-                          <p className="text-sm text-muted-foreground">
-                            Submitted:{" "}
-                            {new Date(submission.submittedAt).toLocaleString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-sm">{submission.size}</p>
-                          <Button variant="outline" size="sm">
-                            Download
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                No submissions yet
-              </p>
-            )}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="grading" className="space-y-4">
-          {assignment.status === "graded" ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Grade</Label>
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl font-bold">
-                      {assignment.grade}
-                    </span>
-                    <span className="text-muted-foreground">
-                      / {assignment.maxGrade}
-                    </span>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label>Stars</Label>
-                  <div className="flex items-center gap-1">
-                    {Array.from({ length: assignment.maxStars }, (_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-5 w-5 ${
-                          i < (assignment.stars || 0)
-                            ? "text-yellow-500 fill-yellow-500"
-                            : "text-gray-300"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-              {assignment.feedback && (
-                <div className="space-y-2">
-                  <Label>Feedback</Label>
-                  <p className="text-sm bg-muted p-3 rounded">
-                    {assignment.feedback}
-                  </p>
-                </div>
-              )}
-            </div>
-          ) : assignment.status === "submitted" ? (
-            <div className="space-y-4">
-              <h4 className="font-medium">Grade Assignment</h4>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Grade (out of {assignment.maxGrade})</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max={assignment.maxGrade}
-                    placeholder="Enter grade"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Stars (out of {assignment.maxStars})</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select stars" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: assignment.maxStars }, (_, i) => (
-                        <SelectItem key={i + 1} value={(i + 1).toString()}>
-                          {i + 1} Star{i + 1 > 1 ? "s" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Feedback</Label>
-                <Textarea
-                  placeholder="Enter feedback for the student..."
-                  rows={4}
-                />
-              </div>
-              <Button
-                onClick={() =>
-                  handleGradeSubmission(
-                    assignment.id,
-                    85,
-                    4,
-                    "Good work! Keep it up."
-                  )
-                }
-                className="w-full"
-              >
-                Submit Grade
-              </Button>
-            </div>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              Assignment not yet submitted for grading
-            </p>
-          )}
-        </TabsContent>
-
-        <TabsContent value="progress" className="space-y-4">
-          <div className="space-y-2">
-            <Label>Assignment Progress</Label>
-            <Progress value={getProgressValue(assignment)} className="w-full" />
-            <p className="text-sm text-muted-foreground">
-              {assignment.status === "pending" && "Waiting for submission"}
-              {assignment.status === "submitted" &&
-                "Submitted, waiting for grading"}
-              {assignment.status === "graded" &&
-                "Assignment completed and graded"}
-              {assignment.status === "overdue" && "Assignment is overdue"}
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Time Remaining</p>
-                    <p className="text-xs text-muted-foreground">
-                      {assignment.status === "overdue"
-                        ? "Overdue"
-                        : new Date(assignment.dueDate) > new Date()
-                        ? `${Math.ceil(
-                            (new Date(assignment.dueDate).getTime() -
-                              new Date().getTime()) /
-                              (1000 * 60 * 60 * 24)
-                          )} days`
-                        : "Due today"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3">
-                <div className="flex items-center gap-2">
-                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Completion</p>
-                    <p className="text-xs text-muted-foreground">
-                      {getProgressValue(assignment)}%
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
-    </DialogContent>
-  );
+  if (isLoading) {
+    return <CardGridSkeleton cards={8} showHeader={true} />;
+  }
 
   return (
+    <>
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold">Assignments Management</h1>
           <p className="text-muted-foreground">
-            Track and manage student assignments
+              Track and manage student assignments ({assignments.length} total)
           </p>
         </div>
         {(userRole === "admin" || userRole === "tutor") && (
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
           <Button className="flex items-center gap-2">
             <Plus className="h-4 w-4" />
-            Create Assignment
+                  Add Assignment
           </Button>
+              </DialogTrigger>
+                             <Suspense fallback={<div>Loading...</div>}>
+                 <LazyAddAssignmentDialog />
+               </Suspense>
+            </Dialog>
         )}
       </div>
 
@@ -680,15 +765,10 @@ const Assignments = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <CardTitle>Assignments List</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search assignments..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full sm:w-64"
+                <SearchComponent 
+                  searchTerm={searchTerm} 
+                  onSearchChange={handleSearchChange} 
                 />
-              </div>
               <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" />
                 Filter
@@ -698,188 +778,23 @@ const Assignments = () => {
         </CardHeader>
 
         <CardContent>
-          <div className="flex gap-2 mb-4 overflow-x-auto">
-            <Button
-              variant={activeTab === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("all")}
-            >
-              All ({assignments.length})
-            </Button>
-            <Button
-              variant={activeTab === "pending" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("pending")}
-            >
-              Pending (
-              {assignments.filter((a) => a.status === "pending").length})
-            </Button>
-            <Button
-              variant={activeTab === "submitted" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("submitted")}
-            >
-              Submitted (
-              {assignments.filter((a) => a.status === "submitted").length})
-            </Button>
-            <Button
-              variant={activeTab === "graded" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("graded")}
-            >
-              Graded ({assignments.filter((a) => a.status === "graded").length})
-            </Button>
-            <Button
-              variant={activeTab === "overdue" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveTab("overdue")}
-            >
-              Overdue (
-              {assignments.filter((a) => a.status === "overdue").length})
-            </Button>
-          </div>
+            <FilterTabs 
+              activeTab={activeTab}
+              onTabChange={handleTabChange}
+              assignments={assignments}
+            />
 
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Assignment</th>
-                  <th className="text-left p-2">Student</th>
-                  <th className="text-left p-2">Category</th>
-                  <th className="text-left p-2">Due Date</th>
-                  <th className="text-left p-2">Status</th>
-                  <th className="text-left p-2">Grade</th>
-                  <th className="text-left p-2">Progress</th>
-                  <th className="text-left p-2">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAssignments.map((assignment) => (
-                  <tr
-                    key={assignment.id}
-                    className="border-b hover:bg-muted/50"
-                  >
-                    <td className="p-2">
-                      <div>
-                        <p className="font-medium">{assignment.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {assignment.id}
-                        </p>
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback>
-                            {assignment.studentName
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="text-sm font-medium">
-                            {assignment.studentName}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {assignment.batchName}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <Badge variant="secondary">{assignment.category}</Badge>
-                    </td>
-                    <td className="p-2">
-                      <div>
-                        <p className="text-sm">{assignment.dueDate}</p>
-                        {assignment.status === "overdue" && (
-                          <p className="text-xs text-destructive">Overdue</p>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <Badge variant={getStatusColor(assignment.status)}>
-                        {assignment.status}
-                      </Badge>
-                    </td>
-                    <td className="p-2">
-                      {assignment.grade !== undefined ? (
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">
-                            {assignment.grade}/{assignment.maxGrade}
-                          </span>
-                          <div className="flex">
-                            {Array.from(
-                              { length: assignment.maxStars },
-                              (_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-3 w-3 ${
-                                    i < (assignment.stars || 0)
-                                      ? "text-yellow-500 fill-yellow-500"
-                                      : "text-gray-300"
-                                  }`}
-                                />
-                              )
-                            )}
-                          </div>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </td>
-                    <td className="p-2">
-                      <div className="w-20">
-                        <Progress
-                          value={getProgressValue(assignment)}
-                          className="h-2"
-                        />
-                      </div>
-                    </td>
-                    <td className="p-2">
-                      <div className="flex items-center gap-2">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setSelectedAssignment(assignment)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          {selectedAssignment && (
-                            <AssignmentDetailsDialog
-                              assignment={selectedAssignment}
-                            />
-                          )}
-                        </Dialog>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleEdit(assignment)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        {(userRole === "admin" || userRole === "tutor") && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(assignment.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filteredAssignments.length === 0 && (
+            {filteredAssignments.length > 0 ? (
+              <VirtualTable
+                assignments={filteredAssignments}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                selectedAssignment={selectedAssignment}
+                setSelectedAssignment={setSelectedAssignment}
+                userRole={userRole}
+              />
+            ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
                 No assignments found matching your search.
@@ -889,7 +804,8 @@ const Assignments = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 
-export default Assignments;
+export default memo(Assignments);

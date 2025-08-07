@@ -39,71 +39,183 @@ import {
   Trash2,
   Wallet,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
 import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
-// Dummy data
-const journalEntries = [
-  {
-    id: 1,
-    type: "Fee",
-    student: "John Doe",
-    amount: 5000,
-    status: "Approved",
-    date: "2025-01-15",
-    description: "Course Fee Payment",
-    attachments: ["receipt1.pdf"],
-  },
-  {
-    id: 2,
-    type: "Salary",
-    employee: "Jane Smith",
-    amount: 45000,
-    status: "Pending",
-    date: "2025-01-14",
-    description: "Monthly Salary",
-    attachments: [],
-  },
-  {
-    id: 3,
-    type: "Petty Cash",
-    description: "Office Supplies",
-    amount: 1200,
-    status: "Approved",
-    date: "2025-01-13",
-    attachments: ["receipt3.jpg"],
-  },
-];
+// Lazy load components for better performance
+const LazyJournalDetailsDialog = lazy(() => import('./JournalDetailsDialog.tsx'));
+const LazyAddJournalDialog = lazy(() => import('./AddJournalDialog.tsx'));
 
-const Journals = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState("all");
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+// Simple debounce hook implementation
+const useDebounce = (value: any, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1200);
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
 
-  if (isLoading) {
-    return <CardGridSkeleton cards={6} columns={3} showHeader={true} />;
-  }
+  return debouncedValue;
+};
 
-  const filteredEntries = journalEntries.filter(
-    (entry) =>
-      entry.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (entry.student &&
-        entry.student.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (entry.employee &&
-        entry.employee.toLowerCase().includes(searchTerm.toLowerCase()))
+// Simple throttle hook implementation
+const useThrottle = (callback: Function, delay: number) => {
+  const lastRun = useRef<number>(0);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+
+  return useCallback(
+    (...args: any[]) => {
+      const now = Date.now();
+
+      if (now - lastRun.current >= delay) {
+        callback(...args);
+        lastRun.current = now;
+      } else {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
+        timeoutRef.current = setTimeout(() => {
+          callback(...args);
+          lastRun.current = Date.now();
+        }, delay - (now - lastRun.current));
+      }
+    },
+    [callback, delay]
+  );
+};
+
+// Simple virtual scrolling hook
+const useVirtualScrolling = (items: any[], itemHeight: number, containerHeight: number, overscan: number = 5) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const totalHeight = items.length * itemHeight;
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+  const endIndex = Math.min(
+    items.length - 1,
+    Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
   );
 
-  const getStatusColor = (status: string) => {
+  const visibleItems = items.slice(startIndex, endIndex + 1);
+  const offsetY = startIndex * itemHeight;
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return {
+    containerRef,
+    totalHeight,
+    visibleItems,
+    offsetY,
+    handleScroll,
+    startIndex,
+    endIndex,
+  };
+};
+
+// Simple performance logger
+const performanceLogger = {
+  logRender: (time: number) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Journals render time: ${time.toFixed(2)}ms`);
+    }
+  }
+};
+
+interface JournalEntry {
+  id: number;
+  type: "Fee" | "Salary" | "Petty Cash";
+  student?: string;
+  employee?: string;
+  amount: number;
+  status: "Approved" | "Pending" | "Rejected";
+  date: string;
+  description: string;
+  attachments: string[];
+}
+
+// Memoized journal data with caching
+const getDummyJournalEntries = (() => {
+  let cachedEntries: JournalEntry[] | null = null;
+  let cacheTime = 0;
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  return () => {
+    const now = Date.now();
+    if (cachedEntries && (now - cacheTime) < CACHE_DURATION) {
+      return cachedEntries;
+    }
+
+    // Generate large dataset for testing
+    const entries = Array.from({ length: 1000 }, (_, index) => {
+      const types: ("Fee" | "Salary" | "Petty Cash")[] = ["Fee", "Salary", "Petty Cash"];
+      const statuses: ("Approved" | "Pending" | "Rejected")[] = ["Approved", "Pending", "Rejected"];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const status = statuses[Math.floor(Math.random() * statuses.length)];
+      
+      const entry: JournalEntry = {
+        id: index + 1,
+        type,
+        amount: Math.floor(Math.random() * 100000) + 1000,
+        status,
+        date: `2025-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+        description: `${type} transaction ${index + 1}`,
+        attachments: Math.random() > 0.5 ? [`attachment_${index + 1}.pdf`] : [],
+      };
+
+      // Add student or employee based on type
+      if (type === "Fee") {
+        entry.student = `Student ${index + 1}`;
+      } else if (type === "Salary") {
+        entry.employee = `Employee ${index + 1}`;
+      }
+
+      return entry;
+    });
+
+    cachedEntries = entries;
+    cacheTime = now;
+    return entries;
+  };
+})();
+
+// Memoized journal card component
+const JournalCard = memo(({ 
+  entry, 
+  onEdit, 
+  onDelete, 
+  onView,
+  selectedEntry,
+  setSelectedEntry
+}: { 
+  entry: JournalEntry; 
+  onEdit: (entry: JournalEntry) => void; 
+  onDelete: (id: number) => void;
+  onView: (entry: JournalEntry) => void;
+  selectedEntry: JournalEntry | null;
+  setSelectedEntry: (entry: JournalEntry | null) => void;
+}) => {
+  const handleView = useCallback(() => {
+    setSelectedEntry(entry);
+    onView(entry);
+  }, [entry, setSelectedEntry, onView]);
+
+  const handleEdit = useCallback(() => {
+    onEdit(entry);
+  }, [entry, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(entry.id);
+  }, [entry.id, onDelete]);
+
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case "Approved":
         return "bg-success text-success-foreground";
@@ -114,212 +226,416 @@ const Journals = () => {
       default:
         return "bg-secondary text-secondary-foreground";
     }
-  };
+  }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Journals</h1>
-          <p className="text-muted-foreground">
-            Manage fees, salaries, and petty cash transactions
-          </p>
-        </div>
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-primary text-primary-foreground">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Entry
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Add Journal Entry</DialogTitle>
-              <DialogDescription>
-                Create a new journal entry for fees, salary, or petty cash.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="type" className="text-right">
-                  Type
-                </Label>
-                <Select>
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select entry type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="fee">Fee Payment</SelectItem>
-                    <SelectItem value="salary">Salary Payment</SelectItem>
-                    <SelectItem value="petty">Petty Cash</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="amount" className="text-right">
-                  Amount
-                </Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  placeholder="Enter amount"
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="description" className="text-right">
-                  Description
-                </Label>
-                <Textarea
-                  id="description"
-                  placeholder="Enter description"
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="attachment" className="text-right">
-                  Attachment
-                </Label>
-                <Input id="attachment" type="file" className="col-span-3" />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="submit" onClick={() => setIsAddDialogOpen(false)}>
-                Save Entry
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Tabs defaultValue="all" className="space-y-4">
+    <Card>
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <TabsList>
-            <TabsTrigger value="all">All Entries</TabsTrigger>
-            <TabsTrigger value="fees">Fees</TabsTrigger>
-            <TabsTrigger value="salaries">Salaries</TabsTrigger>
-            <TabsTrigger value="petty">Petty Cash</TabsTrigger>
-          </TabsList>
-
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search entries..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 w-64"
-              />
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              {entry.type === "Fee" && (
+                <DollarSign className="w-5 h-5 text-primary" />
+              )}
+              {entry.type === "Salary" && (
+                <Wallet className="w-5 h-5 text-primary" />
+              )}
+              {entry.type === "Petty Cash" && (
+                <Receipt className="w-5 h-5 text-primary" />
+              )}
             </div>
-            <Button variant="outline" size="sm">
-              <Filter className="w-4 h-4 mr-2" />
-              Filter
+            <div>
+              <CardTitle className="text-lg">
+                {entry.description}
+              </CardTitle>
+              <CardDescription>
+                {entry.student && `Student: ${entry.student}`}
+                {entry.employee && `Employee: ${entry.employee}`}
+                {!entry.student &&
+                  !entry.employee &&
+                  `${entry.type} Entry`}
+              </CardDescription>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Badge className={getStatusColor(entry.status)}>
+              {entry.status}
+            </Badge>
+            <span className="text-lg font-semibold">
+              ₹{entry.amount.toLocaleString()}
+            </span>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+            <span>Date: {entry.date}</span>
+            <span>Type: {entry.type}</span>
+            {entry.attachments.length > 0 && (
+              <span>{entry.attachments.length} attachment(s)</span>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="sm" onClick={handleView}>
+                  <Eye className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              {selectedEntry && (
+                <Suspense fallback={<div>Loading...</div>}>
+                  <LazyJournalDetailsDialog entry={selectedEntry} />
+                </Suspense>
+              )}
+            </Dialog>
+            <Button variant="ghost" size="sm" onClick={handleEdit}>
+              <Edit className="w-4 h-4" />
             </Button>
-            <Button variant="outline" size="sm">
-              <Download className="w-4 h-4 mr-2" />
-              Export
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive"
+              onClick={handleDelete}
+            >
+              <Trash2 className="w-4 h-4" />
             </Button>
           </div>
         </div>
+      </CardContent>
+    </Card>
+  );
+});
 
-        <TabsContent value="all" className="space-y-4">
-          <div className="grid gap-4">
-            {filteredEntries.map((entry) => (
-              <Card key={entry.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        {entry.type === "Fee" && (
-                          <DollarSign className="w-5 h-5 text-primary" />
-                        )}
-                        {entry.type === "Salary" && (
-                          <Wallet className="w-5 h-5 text-primary" />
-                        )}
-                        {entry.type === "Petty Cash" && (
-                          <Receipt className="w-5 h-5 text-primary" />
-                        )}
-                      </div>
-                      <div>
-                        <CardTitle className="text-lg">
-                          {entry.description}
-                        </CardTitle>
-                        <CardDescription>
-                          {entry.student && `Student: ${entry.student}`}
-                          {entry.employee && `Employee: ${entry.employee}`}
-                          {!entry.student &&
-                            !entry.employee &&
-                            `${entry.type} Entry`}
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge className={getStatusColor(entry.status)}>
-                        {entry.status}
-                      </Badge>
-                      <span className="text-lg font-semibold">
-                        ₹{entry.amount.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>Date: {entry.date}</span>
-                      <span>Type: {entry.type}</span>
-                      {entry.attachments.length > 0 && (
-                        <span>{entry.attachments.length} attachment(s)</span>
-                      )}
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Button variant="ghost" size="sm">
-                        <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+JournalCard.displayName = "JournalCard";
+
+// Memoized search component
+const SearchComponent = memo(({ 
+  searchTerm, 
+  onSearchChange 
+}: { 
+  searchTerm: string; 
+  onSearchChange: (value: string) => void; 
+}) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  }, [onSearchChange]);
+
+  return (
+    <div className="relative">
+      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+      <Input
+        placeholder="Search entries..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        className="pl-8 w-64"
+      />
+    </div>
+  );
+});
+
+SearchComponent.displayName = "SearchComponent";
+
+// Memoized filter tabs component
+const FilterTabs = memo(({ 
+  selectedTab, 
+  onTabChange 
+}: { 
+  selectedTab: string; 
+  onTabChange: (value: string) => void; 
+}) => {
+  return (
+    <TabsList>
+      <TabsTrigger value="all" onClick={() => onTabChange("all")}>
+        All Entries
+      </TabsTrigger>
+      <TabsTrigger value="fees" onClick={() => onTabChange("fees")}>
+        Fees
+      </TabsTrigger>
+      <TabsTrigger value="salaries" onClick={() => onTabChange("salaries")}>
+        Salaries
+      </TabsTrigger>
+      <TabsTrigger value="petty" onClick={() => onTabChange("petty")}>
+        Petty Cash
+      </TabsTrigger>
+    </TabsList>
+  );
+});
+
+FilterTabs.displayName = "FilterTabs";
+
+// Virtual grid component for large datasets
+const VirtualGrid = memo(({ 
+  entries, 
+  onEdit, 
+  onDelete, 
+  onView,
+  selectedEntry,
+  setSelectedEntry
+}: { 
+  entries: JournalEntry[];
+  onEdit: (entry: JournalEntry) => void;
+  onDelete: (id: number) => void;
+  onView: (entry: JournalEntry) => void;
+  selectedEntry: JournalEntry | null;
+  setSelectedEntry: (entry: JournalEntry | null) => void;
+}) => {
+  const ITEM_HEIGHT = 200; // Approximate height of each card
+  const CONTAINER_HEIGHT = 600; // Height of the grid container
+  const ITEMS_PER_ROW = 3; // Number of items per row
+
+  const { 
+    visibleItems, 
+    containerRef, 
+    totalHeight, 
+    offsetY, 
+    handleScroll 
+  } = useVirtualScrolling(entries, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
+
+  return (
+    <div 
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="overflow-auto"
+      style={{ height: CONTAINER_HEIGHT }}
+    >
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        <div style={{ transform: `translateY(${offsetY}px)` }}>
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+            {visibleItems.map((entry) => (
+              <JournalCard
+                key={entry.id}
+                entry={entry}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onView={onView}
+                selectedEntry={selectedEntry}
+                setSelectedEntry={setSelectedEntry}
+              />
             ))}
           </div>
-        </TabsContent>
-
-        <TabsContent value="fees">
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              Fee entries will be shown here
-            </p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="salaries">
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              Salary entries will be shown here
-            </p>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="petty">
-          <div className="text-center py-8">
-            <p className="text-muted-foreground">
-              Petty cash entries will be shown here
-            </p>
-          </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
+  );
+});
+
+VirtualGrid.displayName = "VirtualGrid";
+
+const Journals = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTab, setSelectedTab] = useState("all");
+  const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+
+  // Performance monitoring
+  useEffect(() => {
+    performanceLogger.logRender(performance.now());
+  });
+
+  // Debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Memoized filtered entries
+  const filteredEntries = useMemo(() => {
+    const startTime = performance.now();
+    
+    let filtered = journalEntries.filter(
+      (entry) =>
+        entry.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+        (entry.student &&
+          entry.student.toLowerCase().includes(debouncedSearchTerm.toLowerCase())) ||
+        (entry.employee &&
+          entry.employee.toLowerCase().includes(debouncedSearchTerm.toLowerCase()))
+    );
+
+    // Filter by tab
+    if (selectedTab === "fees") {
+      filtered = filtered.filter(entry => entry.type === "Fee");
+    } else if (selectedTab === "salaries") {
+      filtered = filtered.filter(entry => entry.type === "Salary");
+    } else if (selectedTab === "petty") {
+      filtered = filtered.filter(entry => entry.type === "Petty Cash");
+    }
+
+    const endTime = performance.now();
+    performanceLogger.logRender(endTime - startTime);
+
+    return filtered;
+  }, [journalEntries, debouncedSearchTerm, selectedTab]);
+
+  // Throttled handlers
+  const handleEdit = useThrottle((entry: JournalEntry) => {
+    console.log("Edit entry:", entry);
+  }, 300);
+
+  const handleDelete = useThrottle((id: number) => {
+    setJournalEntries(prev => prev.filter(entry => entry.id !== id));
+  }, 300);
+
+  const handleView = useThrottle((entry: JournalEntry) => {
+    // View logic here
+  }, 300);
+
+  // Initialize data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        const data = getDummyJournalEntries();
+        setJournalEntries(data);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading journal entries:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Handle search change
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value);
+  }, []);
+
+  // Handle tab change
+  const handleTabChange = useCallback((value: string) => {
+    setSelectedTab(value);
+  }, []);
+
+  if (isLoading) {
+    return <CardGridSkeleton cards={6} columns={3} showHeader={true} />;
+  }
+
+  return (
+    <>
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Journals</h1>
+            <p className="text-muted-foreground">
+              Manage fees, salaries, and petty cash transactions ({journalEntries.length} total)
+            </p>
+          </div>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-primary text-primary-foreground">
+                <Plus className="w-4 h-4 mr-2" />
+                Add Entry
+              </Button>
+            </DialogTrigger>
+            <Suspense fallback={<div>Loading...</div>}>
+              <LazyAddJournalDialog />
+            </Suspense>
+          </Dialog>
+        </div>
+
+        <Tabs defaultValue="all" className="space-y-4">
+          <div className="flex items-center justify-between">
+            <FilterTabs 
+              selectedTab={selectedTab}
+              onTabChange={handleTabChange}
+            />
+
+            <div className="flex items-center space-x-2">
+              <SearchComponent 
+                searchTerm={searchTerm} 
+                onSearchChange={handleSearchChange} 
+              />
+              <Button variant="outline" size="sm">
+                <Filter className="w-4 h-4 mr-2" />
+                Filter
+              </Button>
+              <Button variant="outline" size="sm">
+                <Download className="w-4 h-4 mr-2" />
+                Export
+              </Button>
+            </div>
+          </div>
+
+          <TabsContent value="all" className="space-y-4">
+            {filteredEntries.length > 0 ? (
+              <VirtualGrid
+                entries={filteredEntries}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                selectedEntry={selectedEntry}
+                setSelectedEntry={setSelectedEntry}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  No journal entries found matching your search.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="fees">
+            {filteredEntries.length > 0 ? (
+              <VirtualGrid
+                entries={filteredEntries}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                selectedEntry={selectedEntry}
+                setSelectedEntry={setSelectedEntry}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  No fee entries found.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="salaries">
+            {filteredEntries.length > 0 ? (
+              <VirtualGrid
+                entries={filteredEntries}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                selectedEntry={selectedEntry}
+                setSelectedEntry={setSelectedEntry}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  No salary entries found.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="petty">
+            {filteredEntries.length > 0 ? (
+              <VirtualGrid
+                entries={filteredEntries}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                selectedEntry={selectedEntry}
+                setSelectedEntry={setSelectedEntry}
+              />
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">
+                  No petty cash entries found.
+                </p>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
+    </>
   );
 };
 
-export default Journals;
+export default memo(Journals);

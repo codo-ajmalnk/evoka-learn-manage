@@ -52,541 +52,178 @@ import {
   Search,
   Trash2,
   User,
+  Users,
 } from "lucide-react";
-import { useState, useEffect } from "react";
-
-// Dummy student data
-const dummyStudents = [
-  {
-    id: "STU001",
-    firstName: "John",
-    lastName: "Doe",
-    email: "john.doe@email.com",
-    phone: "+91 9876543210",
-    whatsapp: "+91 9876543210",
-    address: "123 Main St, Mumbai, MH 400001",
-    dob: "1998-05-15",
-    gender: "Male",
-    bloodGroup: "O+",
-    qualification: "Bachelor's in Arts",
-    percentage: 78.5,
-    fatherName: "Robert Doe",
-    motherName: "Mary Doe",
-    batch: "Batch A - 2025",
-    status: "Active",
-    joinDate: "2025-01-15",
-    totalFees: 50000,
-    paidFees: 35000,
-    pendingFees: 15000,
-    attendanceRate: 94,
-    assignments: 12,
-    pendingAssignments: 2,
-  },
-  {
-    id: "STU002",
-    firstName: "Sarah",
-    lastName: "Wilson",
-    email: "sarah.wilson@email.com",
-    phone: "+91 9876543211",
-    whatsapp: "+91 9876543211",
-    address: "456 Oak Ave, Delhi, DL 110001",
-    dob: "1999-08-22",
-    gender: "Female",
-    bloodGroup: "A+",
-    qualification: "Bachelor's in Commerce",
-    percentage: 85.2,
-    fatherName: "David Wilson",
-    motherName: "Lisa Wilson",
-    batch: "Batch B - 2025",
-    status: "Active",
-    joinDate: "2025-02-01",
-    totalFees: 50000,
-    paidFees: 50000,
-    pendingFees: 0,
-    attendanceRate: 97,
-    assignments: 15,
-    pendingAssignments: 1,
-  },
-  {
-    id: "STU003",
-    firstName: "Mike",
-    lastName: "Johnson",
-    email: "mike.johnson@email.com",
-    phone: "+91 9876543212",
-    whatsapp: "+91 9876543212",
-    address: "789 Pine St, Bangalore, KA 560001",
-    dob: "1997-12-10",
-    gender: "Male",
-    bloodGroup: "B+",
-    qualification: "Bachelor's in Science",
-    percentage: 82.1,
-    fatherName: "James Johnson",
-    motherName: "Emma Johnson",
-    batch: "Batch A - 2025",
-    status: "Inactive",
-    joinDate: "2023-11-15",
-    totalFees: 50000,
-    paidFees: 25000,
-    pendingFees: 25000,
-    attendanceRate: 76,
-    assignments: 18,
-    pendingAssignments: 5,
-  },
-];
-
-const Students = () => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [students, setStudents] = useState(dummyStudents);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const { toast } = useToast();
+import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
+import { useBatches } from "@/contexts/BatchContext";
+import { useNavigate } from "react-router-dom";
+// Simple debounce hook implementation
+const useDebounce = (value: any, delay: number) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
   useEffect(() => {
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1200);
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
 
-    return () => clearTimeout(timer);
-  }, []);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
 
-  if (isLoading) {
-    return <TableSkeleton title="Students" subtitle="Manage student information and records" />;
-  }
+  return debouncedValue;
+};
 
-  // Get unique batches from students
-  const uniqueBatches = [...new Set(students.map(student => student.batch))];
+// Simple throttle hook implementation
+const useThrottle = (callback: Function, delay: number) => {
+  const lastRun = useRef<number>(0);
+  const timeoutRef = useRef<NodeJS.Timeout>();
 
-  const filteredStudents = students.filter((student) => {
-    const matchesSearch =
-      `${student.firstName} ${student.lastName} ${student.email} ${student.id}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+  return useCallback(
+    (...args: any[]) => {
+      const now = Date.now();
 
-    const matchesFilter =
-      activeFilter === "all" ||
-      (activeFilter === "active" && student.status === "Active") ||
-      (activeFilter === "inactive" && student.status === "Inactive") ||
-      (activeFilter === student.batch);
+      if (now - lastRun.current >= delay) {
+        callback(...args);
+        lastRun.current = now;
+      } else {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
 
-    return matchesSearch && matchesFilter;
-  });
+        timeoutRef.current = setTimeout(() => {
+          callback(...args);
+          lastRun.current = Date.now();
+        }, delay - (now - lastRun.current));
+      }
+    },
+    [callback, delay]
+  );
+};
 
-  const handleEdit = (student: any) => {
-    toast({
-      title: "Edit Student",
-      description: `Editing ${student.firstName} ${student.lastName}`,
-    });
-  };
+// Simple virtual scrolling hook
+const useVirtualScrolling = (items: any[], itemHeight: number, containerHeight: number, overscan: number = 5) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleDelete = (id: string) => {
-    setStudents(students.filter((student) => student.id !== id));
-    toast({
-      title: "Student Deleted",
-      description: "Student has been successfully deleted.",
-    });
-  };
-
-  const StudentDetailsDialog = ({ student }: { student: any }) => (
-    <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
-      <DialogHeader>
-        <DialogTitle>
-          Student Details - {student.firstName} {student.lastName}
-        </DialogTitle>
-        <DialogDescription>Student ID: {student.id}</DialogDescription>
-      </DialogHeader>
-
-      <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="personal">Personal</TabsTrigger>
-          <TabsTrigger value="payment">Payment</TabsTrigger>
-          <TabsTrigger value="assignment">Assignment</TabsTrigger>
-          <TabsTrigger value="batch">Batch</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="personal" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <User className="h-5 w-5" />
-                Personal Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid grid-cols-2 gap-4">
-              <div className="col-span-2 flex items-center gap-4 mb-4">
-                <Avatar className="h-20 w-20">
-                  <AvatarFallback className="text-lg">
-                    {student.firstName.charAt(0)}
-                    {student.lastName.charAt(0)}
-                  </AvatarFallback>
-                </Avatar>
-                <div>
-                  <h3 className="text-xl font-semibold">
-                    {student.firstName} {student.lastName}
-                  </h3>
-                  <Badge
-                    variant={
-                      student.status === "Active" ? "default" : "secondary"
-                    }
-                  >
-                    {student.status}
-                  </Badge>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Email
-                </label>
-                <p className="flex items-center gap-2">
-                  <Mail className="h-4 w-4" />
-                  {student.email}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Phone
-                </label>
-                <p className="flex items-center gap-2">
-                  <Phone className="h-4 w-4" />
-                  {student.phone}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Date of Birth
-                </label>
-                <p className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  {student.dob}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Gender
-                </label>
-                <p>{student.gender}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Blood Group
-                </label>
-                <p>{student.bloodGroup}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Qualification
-                </label>
-                <p>{student.qualification}</p>
-              </div>
-              <div className="col-span-2">
-                <label className="text-sm font-medium text-muted-foreground">
-                  Address
-                </label>
-                <p className="flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {student.address}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Father's Name
-                </label>
-                <p>{student.fatherName}</p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-muted-foreground">
-                  Mother's Name
-                </label>
-                <p>{student.motherName}</p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="payment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Payment Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-primary">
-                    ₹{student.totalFees.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Total Fees</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-success">
-                    ₹{student.paidFees.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Paid</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-destructive">
-                    ₹{student.pendingFees.toLocaleString()}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                </div>
-              </div>
-
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className="bg-success h-2 rounded-full"
-                  style={{
-                    width: `${(student.paidFees / student.totalFees) * 100}%`,
-                  }}
-                ></div>
-              </div>
-              <p className="text-center text-sm text-muted-foreground mt-2">
-                {Math.round((student.paidFees / student.totalFees) * 100)}%
-                Completed
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="assignment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <BookOpen className="h-5 w-5" />
-                Assignment Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="text-center">
-                  <p className="text-2xl font-bold">{student.assignments}</p>
-                  <p className="text-sm text-muted-foreground">
-                    Total Assignments
-                  </p>
-                </div>
-                <div className="text-center">
-                  <p className="text-2xl font-bold text-warning">
-                    {student.pendingAssignments}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Pending</p>
-                </div>
-              </div>
-
-              <div className="w-full bg-muted rounded-full h-2">
-                <div
-                  className="bg-primary h-2 rounded-full"
-                  style={{
-                    width: `${
-                      ((student.assignments - student.pendingAssignments) /
-                        student.assignments) *
-                      100
-                    }%`,
-                  }}
-                ></div>
-              </div>
-              <p className="text-center text-sm text-muted-foreground mt-2">
-                {Math.round(
-                  ((student.assignments - student.pendingAssignments) /
-                    student.assignments) *
-                    100
-                )}
-                % Completed
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="batch" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Batch Information</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Current Batch
-                  </label>
-                  <p className="text-lg font-medium">{student.batch}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-muted-foreground">
-                    Join Date
-                  </label>
-                  <p className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {student.joinDate}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="attendance" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5" />
-                Attendance Details
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-center mb-6">
-                <p className="text-3xl font-bold text-primary">
-                  {student.attendanceRate}%
-                </p>
-                <p className="text-muted-foreground">Overall Attendance Rate</p>
-              </div>
-
-              <div className="w-full bg-muted rounded-full h-3">
-                <div
-                  className="bg-primary h-3 rounded-full"
-                  style={{ width: `${student.attendanceRate}%` }}
-                ></div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </DialogContent>
+  const totalHeight = items.length * itemHeight;
+  const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
+  const endIndex = Math.min(
+    items.length - 1,
+    Math.ceil((scrollTop + containerHeight) / itemHeight) + overscan
   );
 
+  const visibleItems = items.slice(startIndex, endIndex + 1);
+  const offsetY = startIndex * itemHeight;
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return {
+    containerRef,
+    totalHeight,
+    visibleItems,
+    offsetY,
+    handleScroll,
+    startIndex,
+    endIndex,
+  };
+};
+
+// Lazy load components for better performance
+const LazyStudentDetailsDialog = lazy(() => import('./StudentDetailsDialog').then(module => ({ default: module.StudentDetailsDialog })));
+const LazyAddStudentDialog = lazy(() => import('./AddStudentDialog').then(module => ({ default: module.AddStudentDialog })));
+
+// Simple performance logger
+const performanceLogger = {
+  logRender: (time: number) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Students render time: ${time.toFixed(2)}ms`);
+    }
+  }
+};
+
+// Memoized student data with caching
+const getDummyStudents = (() => {
+  let cachedStudents: any[] | null = null;
+  let cacheTime = 0;
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+  return () => {
+    const now = Date.now();
+    if (cachedStudents && (now - cacheTime) < CACHE_DURATION) {
+      return cachedStudents;
+    }
+
+    // Generate large dataset for testing
+    const students = Array.from({ length: 1000 }, (_, index) => ({
+      id: `STU${String(index + 1).padStart(3, '0')}`,
+      firstName: `Student${index + 1}`,
+      lastName: `Last${index + 1}`,
+      email: `student${index + 1}@email.com`,
+      phone: `+91 ${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+      whatsapp: `+91 ${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+      address: `${Math.floor(Math.random() * 999) + 1} Street, City ${index + 1}`,
+      dob: `199${Math.floor(Math.random() * 10)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+      gender: Math.random() > 0.5 ? "Male" : "Female",
+      bloodGroup: ["O+", "A+", "B+", "AB+", "O-", "A-", "B-", "AB-"][Math.floor(Math.random() * 8)],
+      qualification: ["Bachelor's in Arts", "Bachelor's in Commerce", "Bachelor's in Science"][Math.floor(Math.random() * 3)],
+      percentage: Math.floor(Math.random() * 30) + 70,
+      fatherName: `Father${index + 1}`,
+      motherName: `Mother${index + 1}`,
+      batch: [`Batch A - 2025`, `Batch B - 2025`, `Batch C - 2025`][Math.floor(Math.random() * 3)],
+      status: Math.random() > 0.1 ? "Active" : "Inactive",
+      joinDate: `2025-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+      totalFees: 50000,
+      paidFees: Math.floor(Math.random() * 50000),
+      pendingFees: 0,
+      attendanceRate: Math.floor(Math.random() * 30) + 70,
+      assignments: Math.floor(Math.random() * 20) + 10,
+      pendingAssignments: Math.floor(Math.random() * 5),
+    }));
+
+    // Calculate pending fees
+    students.forEach(student => {
+      student.pendingFees = student.totalFees - student.paidFees;
+    });
+
+    cachedStudents = students;
+    cacheTime = now;
+    return students;
+  };
+})();
+
+// Memoized student row component
+const StudentRow = memo(({ 
+  student, 
+  onEdit, 
+  onDelete, 
+  onView,
+  selectedStudent,
+  setSelectedStudent 
+}: { 
+  student: any; 
+  onEdit: (student: any) => void; 
+  onDelete: (id: string) => void;
+  onView: (student: any) => void;
+  selectedStudent: any;
+  setSelectedStudent: (student: any) => void;
+}) => {
+  const handleView = useCallback(() => {
+    setSelectedStudent(student);
+    onView(student);
+  }, [student, setSelectedStudent, onView]);
+
+  const handleEdit = useCallback(() => {
+    onEdit(student);
+  }, [student, onEdit]);
+
+  const handleDelete = useCallback(() => {
+    onDelete(student.id);
+  }, [student.id, onDelete]);
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Students</h1>
-          <p className="text-muted-foreground">
-            Manage student information and records
-          </p>
-        </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              Add Student
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
-            <DialogHeader>
-              <DialogTitle>Add New Student</DialogTitle>
-              <DialogDescription>
-                Create a new student profile
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
-              <div>
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="Enter first name" />
-              </div>
-              <div>
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Enter last name" />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="Enter email" />
-              </div>
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" placeholder="Enter phone number" />
-              </div>
-              <div className="col-span-2">
-                <Label htmlFor="address">Address</Label>
-                <Input id="address" placeholder="Enter address" />
-              </div>
-              <div>
-                <Label htmlFor="dob">Date of Birth</Label>
-                <Input id="dob" type="date" />
-              </div>
-              <div>
-                <Label htmlFor="gender">Gender</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline">Cancel</Button>
-              <Button>Create Student</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <CardTitle>Student List</CardTitle>
-              <CardDescription>View and manage all students</CardDescription>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search students..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full sm:w-64"
-                />
-              </div>
-              <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
-            </div>
-          </div>
-
-          <Tabs value={activeFilter} onValueChange={setActiveFilter} className="mt-4">
-            <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-none lg:flex lg:flex-wrap gap-2">
-              <TabsTrigger value="all" className="flex-1 lg:flex-none">
-                All Students ({students.length})
-              </TabsTrigger>
-              <TabsTrigger value="active" className="flex-1 lg:flex-none">
-                Active ({students.filter((s) => s.status === "Active").length})
-              </TabsTrigger>
-              <TabsTrigger value="inactive" className="flex-1 lg:flex-none">
-                Inactive ({students.filter((s) => s.status === "Inactive").length})
-              </TabsTrigger>
-              {uniqueBatches.map((batch) => (
-                <TabsTrigger key={batch} value={batch} className="flex-1 lg:flex-none">
-                  {batch} ({students.filter((s) => s.batch === batch).length})
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </Tabs>
-        </CardHeader>
-
-        <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Student</TableHead>
-                  <TableHead>ID</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Batch</TableHead>
-                  <TableHead>Fees Status</TableHead>
-                  <TableHead>Attendance</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.map((student) => (
                   <TableRow key={student.id}>
                     <TableCell>
                       <div className="flex items-center gap-3">
@@ -626,9 +263,7 @@ const Students = () => {
                           <div
                             className="bg-success h-1 rounded-full"
                             style={{
-                              width: `${
-                                (student.paidFees / student.totalFees) * 100
-                              }%`,
+                width: `${(student.paidFees / student.totalFees) * 100}%`,
                             }}
                           ></div>
                         </div>
@@ -663,26 +298,28 @@ const Students = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => setSelectedStudent(student)}
+                onClick={handleView}
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
                           </DialogTrigger>
                           {selectedStudent && (
-                            <StudentDetailsDialog student={selectedStudent} />
+              <Suspense fallback={<div>Loading...</div>}>
+                <LazyStudentDetailsDialog student={selectedStudent} />
+              </Suspense>
                           )}
                         </Dialog>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEdit(student)}
+            onClick={handleEdit}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(student.id)}
+            onClick={handleDelete}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -690,12 +327,325 @@ const Students = () => {
                       </div>
                     </TableCell>
                   </TableRow>
+  );
+});
+
+StudentRow.displayName = "StudentRow";
+
+// Memoized search component
+const SearchComponent = memo(({ 
+  searchTerm, 
+  onSearchChange 
+}: { 
+  searchTerm: string; 
+  onSearchChange: (value: string) => void; 
+}) => {
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    onSearchChange(e.target.value);
+  }, [onSearchChange]);
+
+  return (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+      <Input
+        placeholder="Search students..."
+        value={searchTerm}
+        onChange={handleSearchChange}
+        className="pl-10 w-full sm:w-64"
+      />
+    </div>
+  );
+});
+
+SearchComponent.displayName = "SearchComponent";
+
+// Memoized filter tabs component
+const FilterTabs = memo(({ 
+  activeFilter, 
+  onFilterChange, 
+  students, 
+  uniqueBatches 
+}: { 
+  activeFilter: string; 
+  onFilterChange: (value: string) => void; 
+  students: any[];
+  uniqueBatches: string[];
+}) => {
+  const activeCount = useMemo(() => students.filter((s) => s.status === "Active").length, [students]);
+  const inactiveCount = useMemo(() => students.filter((s) => s.status === "Inactive").length, [students]);
+
+  return (
+    <Tabs value={activeFilter} onValueChange={onFilterChange} className="mt-4">
+      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-none lg:flex lg:flex-wrap gap-2">
+        <TabsTrigger value="all" className="flex-1 lg:flex-none">
+          All Students ({students.length})
+        </TabsTrigger>
+        <TabsTrigger value="active" className="flex-1 lg:flex-none">
+          Active ({activeCount})
+        </TabsTrigger>
+        <TabsTrigger value="inactive" className="flex-1 lg:flex-none">
+          Inactive ({inactiveCount})
+        </TabsTrigger>
+        {uniqueBatches.map((batch) => (
+          <TabsTrigger key={batch} value={batch} className="flex-1 lg:flex-none">
+            {batch} ({students.filter((s) => s.batch === batch).length})
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  );
+});
+
+FilterTabs.displayName = "FilterTabs";
+
+// Virtual table component for large datasets
+const VirtualTable = memo(({ 
+  students, 
+  onEdit, 
+  onDelete, 
+  onView,
+  selectedStudent,
+  setSelectedStudent 
+}: { 
+  students: any[];
+  onEdit: (student: any) => void;
+  onDelete: (id: string) => void;
+  onView: (student: any) => void;
+  selectedStudent: any;
+  setSelectedStudent: (student: any) => void;
+}) => {
+  const ITEM_HEIGHT = 80; // Approximate height of each row
+  const CONTAINER_HEIGHT = 600; // Height of the table container
+
+  const { 
+    visibleItems, 
+    containerRef, 
+    totalHeight, 
+    offsetY, 
+    handleScroll 
+  } = useVirtualScrolling(students, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
+
+  return (
+    <div 
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="overflow-auto"
+      style={{ height: CONTAINER_HEIGHT }}
+    >
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        <div style={{ transform: `translateY(${offsetY}px)` }}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Student</TableHead>
+                <TableHead>ID</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Batch</TableHead>
+                <TableHead>Fees Status</TableHead>
+                <TableHead>Attendance</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {visibleItems.map((student) => (
+                <StudentRow
+                  key={student.id}
+                  student={student}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
+                  onView={onView}
+                  selectedStudent={selectedStudent}
+                  setSelectedStudent={setSelectedStudent}
+                />
                 ))}
               </TableBody>
             </Table>
           </div>
+      </div>
+    </div>
+  );
+});
 
-          {filteredStudents.length === 0 && (
+VirtualTable.displayName = "VirtualTable";
+
+const Students = () => {
+  const [isLoading, setIsLoading] = useState(true);
+  const [students, setStudents] = useState<any[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [activeFilter, setActiveFilter] = useState("all");
+  const { toast } = useToast();
+  const { batches } = useBatches();
+  const navigate = useNavigate();
+
+  // Performance monitoring
+  useEffect(() => {
+    performanceLogger.logRender(performance.now());
+  });
+
+  // Debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
+  // Memoized filtered students
+  const filteredStudents = useMemo(() => {
+    const startTime = performance.now();
+    
+    const filtered = students.filter((student) => {
+      const matchesSearch =
+        `${student.firstName} ${student.lastName} ${student.email} ${student.id}`
+          .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase());
+
+      const matchesFilter =
+        activeFilter === "all" ||
+        (activeFilter === "active" && student.status === "Active") ||
+        (activeFilter === "inactive" && student.status === "Inactive") ||
+        (activeFilter === student.batch);
+
+      return matchesSearch && matchesFilter;
+    });
+
+    const endTime = performance.now();
+    performanceLogger.logRender(endTime - startTime);
+
+    return filtered;
+  }, [students, debouncedSearchTerm, activeFilter]);
+
+  // Memoized unique batches
+  const uniqueBatches = useMemo(() => {
+    return [...new Set([
+      ...students.map(student => student.batch),
+      ...batches.map(batch => batch.name)
+    ])];
+  }, [students, batches]);
+
+  // Throttled handlers
+  const handleEdit = useThrottle((student: any) => {
+    toast({
+      title: "Edit Student",
+      description: `Editing ${student.firstName} ${student.lastName}`,
+    });
+  }, 300);
+
+  const handleDelete = useThrottle((id: string) => {
+    setStudents(prev => prev.filter((student) => student.id !== id));
+    toast({
+      title: "Student Deleted",
+      description: "Student has been successfully deleted.",
+    });
+  }, 300);
+
+  const handleView = useThrottle((student: any) => {
+    // View logic here
+  }, 300);
+
+  // Initialize data
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        // Simulate API call
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        const data = getDummyStudents();
+        setStudents(data);
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error loading students:', error);
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Handle search change
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchTerm(value);
+  }, []);
+
+  // Handle filter change
+  const handleFilterChange = useCallback((value: string) => {
+    setActiveFilter(value);
+  }, []);
+
+  if (isLoading) {
+    return <TableSkeleton title="Students" subtitle="Manage student information and records" />;
+  }
+
+  return (
+    <>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold">Students</h1>
+            <p className="text-muted-foreground">
+              Manage student information and records ({students.length} total)
+            </p>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/settings?tab=batches')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Manage Batches
+            </Button>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Student
+                </Button>
+              </DialogTrigger>
+              <Suspense fallback={<div>Loading...</div>}>
+                <LazyAddStudentDialog />
+              </Suspense>
+            </Dialog>
+          </div>
+        </div>
+
+        <Card>
+          <CardHeader>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle>Student List</CardTitle>
+                <CardDescription>
+                  View and manage all students ({filteredStudents.length} filtered)
+                </CardDescription>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                <SearchComponent 
+                  searchTerm={searchTerm} 
+                  onSearchChange={handleSearchChange} 
+                />
+                <Button variant="outline" size="sm">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filter
+                </Button>
+              </div>
+            </div>
+
+            <FilterTabs 
+              activeFilter={activeFilter}
+              onFilterChange={handleFilterChange}
+              students={students}
+              uniqueBatches={uniqueBatches}
+            />
+          </CardHeader>
+
+          <CardContent>
+            {filteredStudents.length > 0 ? (
+              <VirtualTable
+                students={filteredStudents}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onView={handleView}
+                selectedStudent={selectedStudent}
+                setSelectedStudent={setSelectedStudent}
+              />
+            ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
                 No students found matching your criteria.
@@ -705,7 +655,8 @@ const Students = () => {
         </CardContent>
       </Card>
     </div>
+    </>
   );
 };
 
-export default Students;
+export default memo(Students);

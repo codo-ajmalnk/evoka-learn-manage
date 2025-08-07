@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -41,6 +42,8 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { FormSkeleton } from "@/components/ui/skeletons/form-skeleton";
+import { useBatches } from "@/contexts/BatchContext";
+import { useSearchParams } from "react-router-dom";
 
 // Type definitions
 interface Course {
@@ -245,6 +248,9 @@ const Settings = () => {
   const [dialogType, setDialogType] = useState("");
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("courses");
+  const { batches, addBatch, updateBatch, deleteBatch } = useBatches();
+  const [searchParams] = useSearchParams();
 
   // State for all data - moved before conditional return to fix hooks order
   const [coursesData, setCoursesData] = useState<Course[]>(initialCourses);
@@ -263,8 +269,8 @@ const Settings = () => {
     type: "",
     rate: "",
     discount: "",
-    startDate: "",
-    endDate: "",
+    startDate: null as Date | null,
+    endDate: null as Date | null,
     syllabus: "",
   });
 
@@ -276,6 +282,14 @@ const Settings = () => {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Handle URL parameter for active tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   if (isLoading) {
     return <FormSkeleton fields={10} showHeader={true} />;
@@ -293,8 +307,8 @@ const Settings = () => {
         type: item.type || "",
         rate: item.rate?.toString() || "",
         discount: item.discount?.toString() || "",
-        startDate: item.startDate || "",
-        endDate: item.endDate || "",
+        startDate: item.startDate ? new Date(item.startDate) : null,
+        endDate: item.endDate ? new Date(item.endDate) : null,
         syllabus: item.syllabus || "",
       });
     } else {
@@ -306,8 +320,8 @@ const Settings = () => {
         type: "",
         rate: "",
         discount: "",
-        startDate: "",
-        endDate: "",
+        startDate: null,
+        endDate: null,
         syllabus: "",
       });
     }
@@ -367,15 +381,18 @@ const Settings = () => {
           id: newId,
           name: formData.name,
           syllabus: formData.syllabus,
-          startDate: formData.startDate,
+          startDate: formData.startDate ? formData.startDate.toISOString().split('T')[0] : "",
           students: editingItem ? editingItem.students : 0,
         };
         if (editingItem) {
-          setBatchesData((prev) =>
-            prev.map((item) => (item.id === editingItem.id ? batchItem : item))
-          );
+          updateBatch(editingItem.id, batchItem);
         } else {
-          setBatchesData((prev) => [...prev, batchItem]);
+          addBatch({
+            name: formData.name,
+            syllabus: formData.syllabus,
+            startDate: formData.startDate ? formData.startDate.toISOString().split('T')[0] : "",
+            students: 0,
+          });
         }
         break;
 
@@ -419,8 +436,8 @@ const Settings = () => {
           id: newId,
           code: formData.name,
           discount: parseFloat(formData.discount) || 0,
-          startDate: formData.startDate,
-          endDate: formData.endDate,
+          startDate: formData.startDate ? formData.startDate.toISOString().split('T')[0] : "",
+          endDate: formData.endDate ? formData.endDate.toISOString().split('T')[0] : "",
           status: editingItem ? editingItem.status : "Active",
         };
         if (editingItem) {
@@ -452,7 +469,7 @@ const Settings = () => {
         setSyllabiData((prev) => prev.filter((item) => item.id !== id));
         break;
       case "batch":
-        setBatchesData((prev) => prev.filter((item) => item.id !== id));
+        deleteBatch(id);
         break;
       case "category":
         setCategoriesData((prev) => prev.filter((item) => item.id !== id));
@@ -612,15 +629,15 @@ const Settings = () => {
               <Label htmlFor="startDate" className="text-right">
                 Start Date
               </Label>
-              <Input
-                id="startDate"
-                type="date"
-                className="col-span-3"
-                value={formData.startDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, startDate: e.target.value })
-                }
-              />
+              <div className="col-span-3">
+                <DatePicker
+                  value={formData.startDate}
+                  onChange={(date) =>
+                    setFormData({ ...formData, startDate: date })
+                  }
+                  placeholder="Select start date"
+                />
+              </div>
             </div>
           </>
         );
@@ -762,29 +779,29 @@ const Settings = () => {
               <Label htmlFor="startDate" className="text-right">
                 Start Date
               </Label>
-              <Input
-                id="startDate"
-                type="date"
-                className="col-span-3"
-                value={formData.startDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, startDate: e.target.value })
-                }
-              />
+              <div className="col-span-3">
+                <DatePicker
+                  value={formData.startDate}
+                  onChange={(date) =>
+                    setFormData({ ...formData, startDate: date })
+                  }
+                  placeholder="Select start date"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="endDate" className="text-right">
                 End Date
               </Label>
-              <Input
-                id="endDate"
-                type="date"
-                className="col-span-3"
-                value={formData.endDate}
-                onChange={(e) =>
-                  setFormData({ ...formData, endDate: e.target.value })
-                }
-              />
+              <div className="col-span-3">
+                <DatePicker
+                  value={formData.endDate}
+                  onChange={(date) =>
+                    setFormData({ ...formData, endDate: date })
+                  }
+                  placeholder="Select end date"
+                />
+              </div>
             </div>
           </>
         );
@@ -937,7 +954,7 @@ const Settings = () => {
           </div>
 
           <div className="grid gap-4">
-            {batchesData.map((batch) => (
+            {batches.map((batch) => (
               <Card key={batch.id}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
