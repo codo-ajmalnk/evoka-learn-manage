@@ -102,7 +102,7 @@ export const PerformanceMonitor = memo(({
 PerformanceMonitor.displayName = "PerformanceMonitor";
 
 // Virtual scrolling hook for large lists
-export const useVirtualScrolling = <T>(
+export const useVirtualScrolling = <T,>(
   items: T[],
   itemHeight: number,
   containerHeight: number,
@@ -137,7 +137,7 @@ export const useVirtualScrolling = <T>(
 };
 
 // Debounce hook for performance optimization
-export const useDebounce = <T>(value: T, delay: number): T => {
+export const useDebounce = <T,>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
@@ -245,4 +245,4 @@ export const useErrorBoundary = () => {
   }, []);
 
   return { hasError, error, resetError };
-}; 
+};

@@ -12,17 +12,7 @@ export {
   useVirtualScrolling
 } from './PerformanceMonitor';
 
-export {
-  PerformanceTracker,
-  useAdvancedVirtualScrolling,
-  LRUCache,
-  useMemoryManager,
-  useAdvancedDebounce,
-  usePerformanceMonitor,
-  useBatchState,
-  SearchIndex,
-  useOptimizedSearch
-} from './PerformanceOptimizations';
+// Removed PerformanceOptimizations exports as the file was corrupted
 
 // Performance optimization utilities
 export const LAYOUT_PERFORMANCE_CONFIG = {
