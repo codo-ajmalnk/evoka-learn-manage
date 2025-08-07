@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 // Lazy load components for better performance
@@ -382,29 +383,33 @@ const FilterTabs = memo(({
   onTabChange: (value: string) => void; 
   managers: Manager[];
 }) => {
+  const activeCount = useMemo(() => managers.filter((m) => m.status === "active").length, [managers]);
+  const inactiveCount = useMemo(() => managers.filter((m) => m.status === "inactive").length, [managers]);
+
   return (
-    <div className="flex gap-2 mb-4">
-      <Button
-        variant={activeTab === "all" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onTabChange("all")}
-      >
-        All Managers ({managers.length})
-      </Button>
-      <Button
-        variant={activeTab === "active" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onTabChange("active")}
-      >
-        Active ({managers.filter((m) => m.status === "active").length})
-      </Button>
-      <Button
-        variant={activeTab === "inactive" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onTabChange("inactive")}
-      >
-        Inactive ({managers.filter((m) => m.status === "inactive").length})
-      </Button>
+    <div className="mt-4">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+        <TabsList className="flex flex-wrap w-full gap-1 h-auto p-1">
+          <TabsTrigger 
+            value="all" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            All Managers ({managers.length})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="active" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Active ({activeCount})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="inactive" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Inactive ({inactiveCount})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   );
 });
@@ -490,6 +495,8 @@ const Managers = () => {
   const [selectedManager, setSelectedManager] = useState<Manager | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Performance monitoring
   useEffect(() => {
@@ -571,10 +578,19 @@ const Managers = () => {
     setSearchTerm(value);
   }, []);
 
-  // Handle tab change
+  // Handle URL parameters for active tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Handle tab change with URL update
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
-  }, []);
+    setSearchParams({ tab: value });
+  }, [setSearchParams]);
 
   if (isLoading) {
     return <TableSkeleton title="Managers Management" subtitle="Manage manager profiles and information" />;
@@ -604,17 +620,43 @@ const Managers = () => {
               Manage manager profiles and information ({managers.length} total)
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/students')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Students
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/tutors')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Tutors
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/executives')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Executives
+          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-        <Button className="flex items-center gap-2">
-          <Plus className="h-4 w-4" />
-          Add New Manager
-        </Button>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add New Manager
+              </Button>
             </DialogTrigger>
             <Suspense fallback={<div>Loading...</div>}>
               <LazyAddManagerDialog />
             </Suspense>
           </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

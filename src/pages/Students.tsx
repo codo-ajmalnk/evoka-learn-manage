@@ -40,6 +40,8 @@ import { useToast } from "@/hooks/use-toast";
 import {
   BookOpen,
   Calendar,
+  ChevronLeft,
+  ChevronRight,
   Clock,
   DollarSign,
   Edit,
@@ -56,7 +58,18 @@ import {
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
 import { useBatches } from "@/contexts/BatchContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+
+// Add custom CSS for scrollbar hiding
+const scrollbarHideStyles = `
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+`;
 // Simple debounce hook implementation
 const useDebounce = (value: any, delay: number) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -359,7 +372,7 @@ const SearchComponent = memo(({
 
 SearchComponent.displayName = "SearchComponent";
 
-// Memoized filter tabs component
+// Simple filter tabs component
 const FilterTabs = memo(({ 
   activeFilter, 
   onFilterChange, 
@@ -375,24 +388,39 @@ const FilterTabs = memo(({
   const inactiveCount = useMemo(() => students.filter((s) => s.status === "Inactive").length, [students]);
 
   return (
-    <Tabs value={activeFilter} onValueChange={onFilterChange} className="mt-4">
-      <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 lg:grid-cols-none lg:flex lg:flex-wrap gap-2">
-        <TabsTrigger value="all" className="flex-1 lg:flex-none">
-          All Students ({students.length})
-        </TabsTrigger>
-        <TabsTrigger value="active" className="flex-1 lg:flex-none">
-          Active ({activeCount})
-        </TabsTrigger>
-        <TabsTrigger value="inactive" className="flex-1 lg:flex-none">
-          Inactive ({inactiveCount})
-        </TabsTrigger>
-        {uniqueBatches.map((batch) => (
-          <TabsTrigger key={batch} value={batch} className="flex-1 lg:flex-none">
-            {batch} ({students.filter((s) => s.batch === batch).length})
+    <div className="mt-4">
+      <Tabs value={activeFilter} onValueChange={onFilterChange} className="w-full">
+        <TabsList className="flex flex-wrap w-full gap-1 h-auto p-1">
+          <TabsTrigger 
+            value="all" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            All ({students.length})
           </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
+          <TabsTrigger 
+            value="active" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Active ({activeCount})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="inactive" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Inactive ({inactiveCount})
+          </TabsTrigger>
+          {uniqueBatches.map((batch) => (
+            <TabsTrigger 
+              key={batch} 
+              value={batch} 
+              className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+            >
+              {batch} ({students.filter((s) => s.batch === batch).length})
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
   );
 });
 
@@ -478,6 +506,19 @@ const Students = () => {
   const { toast } = useToast();
   const { batches } = useBatches();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Inject custom styles for scrollbar hiding
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = scrollbarHideStyles;
+    document.head.appendChild(style);
+    return () => {
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
+    };
+  }, []);
 
   // Performance monitoring
   useEffect(() => {
@@ -564,10 +605,19 @@ const Students = () => {
     setSearchTerm(value);
   }, []);
 
-  // Handle filter change
+  // Handle URL parameters for active filter
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam) {
+      setActiveFilter(filterParam);
+    }
+  }, [searchParams]);
+
+  // Handle filter change with URL update
   const handleFilterChange = useCallback((value: string) => {
     setActiveFilter(value);
-  }, []);
+    setSearchParams({ filter: value });
+  }, [setSearchParams]);
 
   if (isLoading) {
     return <TableSkeleton title="Students" subtitle="Manage student information and records" />;
@@ -604,6 +654,73 @@ const Students = () => {
               </Suspense>
             </Dialog>
           </div>
+        </div>
+
+        {/* Statistics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-primary/10 rounded-lg">
+                  <Users className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Total Students</p>
+                  <p className="text-xl font-semibold">{students.length}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-success/10 rounded-lg">
+                  <BookOpen className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Active Students</p>
+                  <p className="text-xl font-semibold">
+                    {students.filter((s) => s.status === "Active").length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-warning/10 rounded-lg">
+                  <Clock className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Pending Fees</p>
+                  <p className="text-xl font-semibold">
+                    {students.filter((s) => s.pendingFees > 0).length}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-info/10 rounded-lg">
+                  <DollarSign className="h-5 w-5 text-info" />
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Avg Attendance</p>
+                  <p className="text-xl font-semibold">
+                    {Math.round(
+                      students.reduce((sum, s) => sum + s.attendanceRate, 0) / students.length
+                    )}%
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Card>
@@ -660,3 +777,4 @@ const Students = () => {
 };
 
 export default memo(Students);
+

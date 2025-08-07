@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DatePicker } from "@/components/ui/date-picker";
+import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 import {
   Select,
   SelectContent,
@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   Book,
+  Calendar,
   DollarSign,
   Edit,
   GraduationCap,
@@ -40,10 +41,73 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, lazy, Suspense, useRef } from "react";
 import { FormSkeleton } from "@/components/ui/skeletons/form-skeleton";
 import { useBatches } from "@/contexts/BatchContext";
-import { useSearchParams } from "react-router-dom";
+import { useLeaveTypes } from "@/contexts/LeaveTypesContext";
+import { useSearchParams, useNavigate } from "react-router-dom";
+
+// Performance optimization hooks
+const useDebounce = (value: string, delay: number): string => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+const useThrottle = (func: (...args: any[]) => void, delay: number) => {
+  const lastRun = useRef(Date.now());
+
+  return useCallback((...args: any[]) => {
+    if (Date.now() - lastRun.current >= delay) {
+      func(...args);
+      lastRun.current = Date.now();
+    }
+  }, [func, delay]);
+};
+
+const performanceLogger = (componentName: string, operation: string) => {
+  const start = performance.now();
+  return () => {
+    const end = performance.now();
+    console.log(`${componentName} ${operation}: ${(end - start).toFixed(2)}ms`);
+  };
+};
+
+const useVirtualScrolling = (items: any[], itemHeight: number, containerHeight: number) => {
+  const [scrollTop, setScrollTop] = useState(0);
+  
+  const visibleItems = useMemo(() => {
+    const startIndex = Math.floor(scrollTop / itemHeight);
+    const endIndex = Math.min(startIndex + Math.ceil(containerHeight / itemHeight) + 1, items.length);
+    return items.slice(startIndex, endIndex).map((item, index) => ({
+      item,
+      index: startIndex + index,
+      style: {
+        position: 'absolute' as const,
+        top: (startIndex + index) * itemHeight,
+        height: itemHeight,
+        width: '100%'
+      }
+    }));
+  }, [items, itemHeight, containerHeight, scrollTop]);
+
+  const totalHeight = items.length * itemHeight;
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    setScrollTop(e.currentTarget.scrollTop);
+  }, []);
+
+  return { visibleItems, totalHeight, handleScroll };
+};
 
 // Type definitions
 interface Course {
@@ -93,8 +157,23 @@ interface Coupon {
   status: string;
 }
 
-// Initial data
-const initialCourses: Course[] = [
+interface LeaveType {
+  id: number;
+  name: string;
+  description: string;
+  maxDays: number;
+  status: "active" | "inactive";
+}
+
+// Memoized data generation with caching
+const getInitialCourses = (): Course[] => {
+  const cacheKey = 'settingsCourses';
+  const cached = sessionStorage.getItem(cacheKey);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+
+  const data = [
   {
     id: 1,
     name: "Web Development",
@@ -109,14 +188,18 @@ const initialCourses: Course[] = [
     duration: "4 months",
     status: "Active",
   },
-  {
-    id: 3,
-    name: "Graphic Design",
-    code: "GD001",
-    duration: "5 months",
-    status: "Active",
-  },
-];
+      {
+      id: 3,
+      name: "Graphic Design",
+      code: "GD001",
+      duration: "5 months",
+      status: "Active",
+    },
+  ];
+
+  sessionStorage.setItem(cacheKey, JSON.stringify(data));
+  return data;
+};
 
 const initialSyllabi: Syllabus[] = [
   {
@@ -241,7 +324,193 @@ const initialCoupons: Coupon[] = [
   },
 ];
 
-const Settings = () => {
+const initialLeaveTypes: LeaveType[] = [
+  {
+    id: 1,
+    name: "Sick Leave",
+    description: "Medical leave for health-related issues",
+    maxDays: 15,
+    status: "active",
+  },
+  {
+    id: 2,
+    name: "Personal Leave",
+    description: "Personal time off for personal matters",
+    maxDays: 10,
+    status: "active",
+  },
+  {
+    id: 3,
+    name: "Vacation",
+    description: "Annual vacation leave",
+    maxDays: 30,
+    status: "active",
+  },
+  {
+    id: 4,
+    name: "Emergency Leave",
+    description: "Urgent leave for emergency situations",
+    maxDays: 5,
+    status: "active",
+  },
+];
+
+// Utility functions
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "Active":
+      return "bg-success text-success-foreground";
+    case "Inactive":
+      return "bg-secondary text-secondary-foreground";
+    case "Expired":
+      return "bg-destructive text-destructive-foreground";
+    default:
+      return "bg-secondary text-secondary-foreground";
+  }
+};
+
+// Memoized components for better performance
+const SettingsCard = memo(({ 
+  item, 
+  icon: Icon, 
+  title, 
+  subtitle, 
+  status, 
+  onEdit, 
+  onDelete, 
+  showSwitch = false,
+  switchChecked = false,
+  onSwitchChange = () => {}
+}: {
+  item: any;
+  icon: React.ComponentType<{ className?: string }>;
+  title: string;
+  subtitle: string;
+  status?: string;
+  onEdit: () => void;
+  onDelete: () => void;
+  showSwitch?: boolean;
+  switchChecked?: boolean;
+  onSwitchChange?: () => void;
+}) => {
+  const logRender = performanceLogger('SettingsCard', 'render');
+  
+  useEffect(() => {
+    logRender();
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 rounded-lg bg-primary/10">
+              <Icon className="w-5 h-5 text-primary" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">{title}</CardTitle>
+              <CardDescription>{subtitle}</CardDescription>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2">
+            {status && (
+              <Badge className={getStatusColor(status)}>
+                {status}
+              </Badge>
+            )}
+            {showSwitch && (
+              <Switch
+                checked={switchChecked}
+                onCheckedChange={onSwitchChange}
+              />
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-destructive"
+              onClick={onDelete}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+    </Card>
+  );
+});
+
+const VirtualList = memo(({ 
+  items, 
+  renderItem, 
+  itemHeight = 120, 
+  containerHeight = 600 
+}: {
+  items: any[];
+  renderItem: (item: any) => React.ReactNode;
+  itemHeight?: number;
+  containerHeight?: number;
+}) => {
+  const { visibleItems, totalHeight, handleScroll } = useVirtualScrolling(items, itemHeight, containerHeight);
+
+  return (
+    <div 
+      className="overflow-auto"
+      style={{ height: containerHeight }}
+      onScroll={handleScroll}
+    >
+      <div style={{ height: totalHeight, position: 'relative' }}>
+        {visibleItems.map(({ item, style }) => (
+          <div key={item.id} style={style}>
+            {renderItem(item)}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+// Error Boundary component
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Settings Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold">Something went wrong</h3>
+            <p className="text-muted-foreground">Please refresh the page to try again</p>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
+const Settings = memo(() => {
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -249,11 +518,16 @@ const Settings = () => {
   const [editingItem, setEditingItem] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("courses");
+  
+  // Debounced search term
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { batches, addBatch, updateBatch, deleteBatch } = useBatches();
-  const [searchParams] = useSearchParams();
+  const { leaveTypes, addLeaveType, updateLeaveType, deleteLeaveType } = useLeaveTypes();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   // State for all data - moved before conditional return to fix hooks order
-  const [coursesData, setCoursesData] = useState<Course[]>(initialCourses);
+  const [coursesData, setCoursesData] = useState<Course[]>(getInitialCourses());
   const [syllabiData, setSyllabiData] = useState<Syllabus[]>(initialSyllabi);
   const [batchesData, setBatchesData] = useState<Batch[]>(initialBatches);
   const [categoriesData, setCategoriesData] =
@@ -291,11 +565,68 @@ const Settings = () => {
     }
   }, [searchParams]);
 
-  if (isLoading) {
-    return <FormSkeleton fields={10} showHeader={true} />;
-  }
+  // Handle tab change
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setSearchParams({ tab: value });
+  };
 
-  const openDialog = (type: string, item?: any) => {
+  // Memoized filtered data
+  const filteredCourses = useMemo(() => {
+    if (!debouncedSearchTerm) return coursesData;
+    return coursesData.filter(course => 
+      course.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      course.code.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [coursesData, debouncedSearchTerm]);
+
+  const filteredSyllabi = useMemo(() => {
+    if (!debouncedSearchTerm) return syllabiData;
+    return syllabiData.filter(syllabus => 
+      syllabus.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      syllabus.code.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [syllabiData, debouncedSearchTerm]);
+
+  const filteredBatches = useMemo(() => {
+    if (!debouncedSearchTerm) return batches;
+    return batches.filter(batch => 
+      batch.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      batch.syllabus.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [batches, debouncedSearchTerm]);
+
+  const filteredCategories = useMemo(() => {
+    if (!debouncedSearchTerm) return categoriesData;
+    return categoriesData.filter(category => 
+      category.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      category.type.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [categoriesData, debouncedSearchTerm]);
+
+  const filteredTaxes = useMemo(() => {
+    if (!debouncedSearchTerm) return taxData;
+    return taxData.filter(tax => 
+      tax.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [taxData, debouncedSearchTerm]);
+
+  const filteredCoupons = useMemo(() => {
+    if (!debouncedSearchTerm) return couponsData;
+    return couponsData.filter(coupon => 
+      coupon.code.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [couponsData, debouncedSearchTerm]);
+
+  const filteredLeaveTypes = useMemo(() => {
+    if (!debouncedSearchTerm) return leaveTypes;
+    return leaveTypes.filter(leaveType => 
+      leaveType.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      leaveType.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [leaveTypes, debouncedSearchTerm]);
+
+  const openDialog = useCallback((type: string, item?: any) => {
     setDialogType(type);
     setEditingItem(item);
     if (item) {
@@ -326,7 +657,12 @@ const Settings = () => {
       });
     }
     setIsDialogOpen(true);
-  };
+  }, []);
+
+  // Loading check must come after all hooks
+  if (isLoading) {
+    return <FormSkeleton fields={10} showHeader={true} />;
+  }
 
   const handleSave = () => {
     if (!formData.name.trim()) {
@@ -448,6 +784,23 @@ const Settings = () => {
           setCouponsData((prev) => [...prev, couponItem]);
         }
         break;
+
+      case "leaveType":
+        if (editingItem) {
+          updateLeaveType(editingItem.id, {
+            name: formData.name,
+            description: formData.description,
+            maxDays: parseInt(formData.duration) || 0,
+          });
+        } else {
+          addLeaveType({
+            name: formData.name,
+            description: formData.description,
+            maxDays: parseInt(formData.duration) || 0,
+            status: "active",
+          });
+        }
+        break;
     }
 
     toast({
@@ -479,6 +832,9 @@ const Settings = () => {
         break;
       case "coupon":
         setCouponsData((prev) => prev.filter((item) => item.id !== id));
+        break;
+      case "leaveType":
+        deleteLeaveType(id);
         break;
     }
     toast({
@@ -630,12 +986,14 @@ const Settings = () => {
                 Start Date
               </Label>
               <div className="col-span-3">
-                <DatePicker
+                <CustomDatePicker
                   value={formData.startDate}
                   onChange={(date) =>
                     setFormData({ ...formData, startDate: date })
                   }
                   placeholder="Select start date"
+                  size="md"
+                  className="w-full"
                 />
               </div>
             </div>
@@ -780,12 +1138,14 @@ const Settings = () => {
                 Start Date
               </Label>
               <div className="col-span-3">
-                <DatePicker
+                <CustomDatePicker
                   value={formData.startDate}
                   onChange={(date) =>
                     setFormData({ ...formData, startDate: date })
                   }
                   placeholder="Select start date"
+                  size="md"
+                  className="w-full"
                 />
               </div>
             </div>
@@ -794,14 +1154,64 @@ const Settings = () => {
                 End Date
               </Label>
               <div className="col-span-3">
-                <DatePicker
+                <CustomDatePicker
                   value={formData.endDate}
                   onChange={(date) =>
                     setFormData({ ...formData, endDate: date })
                   }
                   placeholder="Select end date"
+                  size="md"
+                  className="w-full"
                 />
               </div>
+            </div>
+          </>
+        );
+      case "leaveType":
+        return (
+          <>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Leave Type Name
+              </Label>
+              <Input
+                id="name"
+                placeholder="Enter leave type name"
+                className="col-span-3"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Enter description"
+                className="col-span-3"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="duration" className="text-right">
+                Max Days
+              </Label>
+              <Input
+                id="duration"
+                type="number"
+                placeholder="Enter maximum days"
+                className="col-span-3"
+                value={formData.duration}
+                onChange={(e) =>
+                  setFormData({ ...formData, duration: e.target.value })
+                }
+              />
             </div>
           </>
         );
@@ -830,23 +1240,55 @@ const Settings = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="courses" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="courses">Courses</TabsTrigger>
           <TabsTrigger value="syllabus">Syllabus</TabsTrigger>
           <TabsTrigger value="batches">Batches</TabsTrigger>
           <TabsTrigger value="categories">Categories</TabsTrigger>
           <TabsTrigger value="tax">Tax Settings</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
+          <TabsTrigger value="leaveTypes">Leave Types</TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Course Management</h2>
-            <Button onClick={() => openDialog("course")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Course
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Course Management</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/students')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Students
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tutors')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Tutors
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/attendance')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Attendance
+              </Button>
+              <Button onClick={() => openDialog("course")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Course
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -893,12 +1335,43 @@ const Settings = () => {
         </TabsContent>
 
         <TabsContent value="syllabus" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Syllabus Management</h2>
-            <Button onClick={() => openDialog("syllabus")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Syllabus
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Syllabus Management</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/students')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Students
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tutors')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Tutors
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/attendance')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Attendance
+              </Button>
+              <Button onClick={() => openDialog("syllabus")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Syllabus
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -945,12 +1418,43 @@ const Settings = () => {
         </TabsContent>
 
         <TabsContent value="batches" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Batch Management</h2>
-            <Button onClick={() => openDialog("batch")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Batch
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Batch Management</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/students')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Students
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tutors')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Tutors
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/attendance')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Attendance
+              </Button>
+              <Button onClick={() => openDialog("batch")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Batch
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -995,12 +1499,43 @@ const Settings = () => {
         </TabsContent>
 
         <TabsContent value="categories" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Category Management</h2>
-            <Button onClick={() => openDialog("category")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Category
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Category Management</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/students')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Students
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tutors')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Tutors
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/attendance')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Attendance
+              </Button>
+              <Button onClick={() => openDialog("category")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Category
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -1046,12 +1581,43 @@ const Settings = () => {
         </TabsContent>
 
         <TabsContent value="tax" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Tax Configuration</h2>
-            <Button onClick={() => openDialog("tax")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Tax
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Tax Configuration</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/students')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Students
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tutors')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Tutors
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/attendance')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Attendance
+              </Button>
+              <Button onClick={() => openDialog("tax")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Tax
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -1099,12 +1665,43 @@ const Settings = () => {
         </TabsContent>
 
         <TabsContent value="coupons" className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold">Coupon Management</h2>
-            <Button onClick={() => openDialog("coupon")}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Coupon
-            </Button>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Coupon Management</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/students')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Students
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tutors')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Tutors
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/attendance')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Attendance
+              </Button>
+              <Button onClick={() => openDialog("coupon")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Coupon
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-4">
@@ -1151,6 +1748,91 @@ const Settings = () => {
             ))}
           </div>
         </TabsContent>
+
+        <TabsContent value="leaveTypes" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Leave Types Management</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/students')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Students
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tutors')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Tutors
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/attendance')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Attendance
+              </Button>
+              <Button onClick={() => openDialog("leaveType")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Leave Type
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {leaveTypes.map((leaveType) => (
+              <Card key={leaveType.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="p-2 rounded-lg bg-primary/10">
+                        <Calendar className="w-5 h-5 text-primary" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">
+                          {leaveType.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {leaveType.description} | Max Days: {leaveType.maxDays}
+                        </CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge className={getStatusColor(leaveType.status === "active" ? "Active" : "Inactive")}>
+                        {leaveType.status}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDialog("leaveType", leaveType)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive"
+                        onClick={() => handleDelete("leaveType", leaveType.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
       </Tabs>
 
       {/* Add/Edit Dialog */}
@@ -1175,6 +1857,11 @@ const Settings = () => {
       </Dialog>
     </div>
   );
-};
+});
+
+// Set display names for debugging
+SettingsCard.displayName = "SettingsCard";
+VirtualList.displayName = "VirtualList";
+Settings.displayName = "Settings";
 
 export default Settings;

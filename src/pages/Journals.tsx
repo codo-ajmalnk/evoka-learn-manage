@@ -37,9 +37,11 @@ import {
   Receipt,
   Search,
   Trash2,
+  Users,
   Wallet,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
 // Lazy load components for better performance
@@ -429,6 +431,8 @@ const Journals = () => {
   const [selectedTab, setSelectedTab] = useState("all");
   const [selectedEntry, setSelectedEntry] = useState<JournalEntry | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Performance monitoring
   useEffect(() => {
@@ -502,10 +506,19 @@ const Journals = () => {
     setSearchTerm(value);
   }, []);
 
-  // Handle tab change
+  // Handle URL parameters for active tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setSelectedTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Handle tab change with URL update
   const handleTabChange = useCallback((value: string) => {
     setSelectedTab(value);
-  }, []);
+    setSearchParams({ tab: value });
+  }, [setSearchParams]);
 
   if (isLoading) {
     return <CardGridSkeleton cards={6} columns={3} showHeader={true} />;
@@ -514,24 +527,66 @@ const Journals = () => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Journals</h1>
             <p className="text-muted-foreground">
               Manage fees, salaries, and petty cash transactions ({journalEntries.length} total)
             </p>
           </div>
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary text-primary-foreground">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Entry
-              </Button>
-            </DialogTrigger>
-            <Suspense fallback={<div>Loading...</div>}>
-              <LazyAddJournalDialog />
-            </Suspense>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/students')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Students
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/tutors')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Tutors
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/executives')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Executives
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/managers')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Managers
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/hr')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              HR
+            </Button>
+            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Entry
+                </Button>
+              </DialogTrigger>
+              <Suspense fallback={<div>Loading...</div>}>
+                <LazyAddJournalDialog />
+              </Suspense>
+            </Dialog>
+          </div>
         </div>
 
         <Tabs defaultValue="all" className="space-y-4">

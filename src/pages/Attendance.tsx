@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { CustomDatePicker, CustomTimePicker } from "@/components/ui/custom-date-picker";
 import {
   Card,
   CardContent,
@@ -19,11 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+
 import {
   Select,
   SelectContent,
@@ -32,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { format } from "date-fns";
+
 import {
   Calendar as CalendarIcon,
   Download,
@@ -44,6 +40,8 @@ import {
   Users,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef, Component, ReactNode } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLeaveTypes } from "@/contexts/LeaveTypesContext";
 import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
 // Inline dialog components to avoid import issues
@@ -354,7 +352,7 @@ const LeaveRequestCard = memo(({ leave }: { leave: LeaveRequest }) => {
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <div>
+        <div>
             <CardTitle className="text-lg">{leave.name}</CardTitle>
             <CardDescription>
               {leave.role} - {leave.leaveType}
@@ -369,15 +367,15 @@ const LeaveRequestCard = memo(({ leave }: { leave: LeaveRequest }) => {
         <div className="grid grid-cols-3 gap-4 text-sm">
           <div>
             <span className="font-medium">Duration:</span>
-            <p className="text-muted-foreground">
+          <p className="text-muted-foreground">
               {leave.fromDate} to {leave.toDate}
-            </p>
-          </div>
+          </p>
+        </div>
           <div>
             <span className="font-medium">Reason:</span>
             <p className="text-muted-foreground">{leave.reason}</p>
           </div>
-          <div className="flex space-x-2">
+        <div className="flex space-x-2">
             {leave.status === "Pending" && (
               <>
                 <Button
@@ -387,7 +385,7 @@ const LeaveRequestCard = memo(({ leave }: { leave: LeaveRequest }) => {
                   onClick={handleApprove}
                 >
                   Approve
-                </Button>
+              </Button>
                 <Button
                   size="sm"
                   variant="outline"
@@ -479,11 +477,11 @@ const AddAttendanceDialog = memo(() => {
   const [formData, setFormData] = useState({
     person: "",
     status: "",
-    timeIn: "",
-    timeOut: "",
+    timeIn: null as Date | null,
+    timeOut: null as Date | null,
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | Date | null) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -496,34 +494,34 @@ const AddAttendanceDialog = memo(() => {
   };
 
   return (
-    <DialogContent>
-      <DialogHeader>
+            <DialogContent>
+              <DialogHeader>
         <DialogTitle>Mark Attendance</DialogTitle>
-        <DialogDescription>
+                <DialogDescription>
           Record attendance for students or staff
-        </DialogDescription>
-      </DialogHeader>
+                </DialogDescription>
+              </DialogHeader>
       <form onSubmit={handleSubmit}>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="person" className="text-right">
               Person
-            </Label>
+                  </Label>
             <Select value={formData.person} onValueChange={(value) => handleInputChange("person", value)}>
-              <SelectTrigger className="col-span-3">
+                    <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select person" />
-              </SelectTrigger>
-              <SelectContent>
+                    </SelectTrigger>
+                    <SelectContent>
                 <SelectItem value="john">John Doe (Student)</SelectItem>
                 <SelectItem value="jane">Jane Smith (Tutor)</SelectItem>
                 <SelectItem value="mike">Mike Johnson (Student)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="status" className="text-right">
               Status
-            </Label>
+                  </Label>
             <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select status" />
@@ -534,51 +532,58 @@ const AddAttendanceDialog = memo(() => {
                 <SelectItem value="late">Late</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="timeIn" className="text-right">
               Time In
-            </Label>
-            <Input 
-              id="timeIn" 
-              type="time" 
-              className="col-span-3"
-              value={formData.timeIn}
-              onChange={(e) => handleInputChange("timeIn", e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+                  </Label>
+                          <div className="col-span-3">
+                <CustomTimePicker
+                  value={formData.timeIn}
+                  onChange={(date) => handleInputChange("timeIn", date)}
+                  placeholder="Select time in"
+                  size="md"
+                  className="w-full"
+                />
+              </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="timeOut" className="text-right">
               Time Out
-            </Label>
-            <Input 
-              id="timeOut" 
-              type="time" 
-              className="col-span-3"
-              value={formData.timeOut}
-              onChange={(e) => handleInputChange("timeOut", e.target.value)}
-            />
-          </div>
-        </div>
-        <DialogFooter>
+                  </Label>
+                          <div className="col-span-3">
+                <CustomTimePicker
+                  value={formData.timeOut}
+                  onChange={(date) => handleInputChange("timeOut", date)}
+                  placeholder="Select time out"
+                  size="md"
+                  className="w-full"
+                />
+              </div>
+                </div>
+              </div>
+              <DialogFooter>
           <Button type="submit">
             Save Attendance
-          </Button>
-        </DialogFooter>
+                </Button>
+              </DialogFooter>
       </form>
-    </DialogContent>
+            </DialogContent>
   );
 });
 
 const LeaveRequestDialog = memo(() => {
   const [formData, setFormData] = useState({
     leaveType: "",
-    fromDate: "",
-    toDate: "",
+    fromDate: null as Date | null,
+    toDate: null as Date | null,
     reason: "",
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const { getActiveLeaveTypes } = useLeaveTypes();
+  const activeLeaveTypes = getActiveLeaveTypes();
+
+  const handleInputChange = (field: string, value: string | Date | null) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -591,59 +596,64 @@ const LeaveRequestDialog = memo(() => {
   };
 
   return (
-    <DialogContent>
-      <DialogHeader>
+            <DialogContent>
+              <DialogHeader>
         <DialogTitle>Submit Leave Request</DialogTitle>
-        <DialogDescription>
+                <DialogDescription>
           Request leave for specific dates
-        </DialogDescription>
-      </DialogHeader>
+                </DialogDescription>
+              </DialogHeader>
       <form onSubmit={handleSubmit}>
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="leaveType" className="text-right">
               Leave Type
-            </Label>
+                  </Label>
             <Select value={formData.leaveType} onValueChange={(value) => handleInputChange("leaveType", value)}>
-              <SelectTrigger className="col-span-3">
+                    <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Select leave type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sick">Sick Leave</SelectItem>
-                <SelectItem value="personal">Personal Leave</SelectItem>
-                <SelectItem value="vacation">Vacation</SelectItem>
-                <SelectItem value="emergency">Emergency Leave</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+                    </SelectTrigger>
+                    <SelectContent>
+                {activeLeaveTypes.map((leaveType) => (
+                  <SelectItem key={leaveType.id} value={leaveType.name.toLowerCase()}>
+                    {leaveType.name}
+                      </SelectItem>
+                ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="fromDate" className="text-right">
               From Date
-            </Label>
-            <Input 
-              id="fromDate" 
-              type="date" 
-              className="col-span-3"
-              value={formData.fromDate}
-              onChange={(e) => handleInputChange("fromDate", e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+                  </Label>
+            <div className="col-span-3">
+              <CustomDatePicker
+                value={formData.fromDate}
+                onChange={(date) => handleInputChange("fromDate", date)}
+                placeholder="Select from date"
+                size="md"
+                className="w-full"
+              />
+            </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="toDate" className="text-right">
               To Date
-            </Label>
-            <Input 
-              id="toDate" 
-              type="date" 
-              className="col-span-3"
-              value={formData.toDate}
-              onChange={(e) => handleInputChange("toDate", e.target.value)}
-            />
-          </div>
-          <div className="grid grid-cols-4 items-center gap-4">
+                  </Label>
+            <div className="col-span-3">
+              <CustomDatePicker
+                value={formData.toDate}
+                onChange={(date) => handleInputChange("toDate", date)}
+                placeholder="Select to date"
+                size="md"
+                className="w-full"
+              />
+            </div>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="reason" className="text-right">
               Reason
-            </Label>
+                  </Label>
             <Input
               id="reason"
               placeholder="Enter reason for leave"
@@ -651,15 +661,15 @@ const LeaveRequestDialog = memo(() => {
               value={formData.reason}
               onChange={(e) => handleInputChange("reason", e.target.value)}
             />
-          </div>
-        </div>
-        <DialogFooter>
+                </div>
+              </div>
+              <DialogFooter>
           <Button type="submit">
             Submit Request
-          </Button>
-        </DialogFooter>
+                </Button>
+              </DialogFooter>
       </form>
-    </DialogContent>
+            </DialogContent>
   );
 });
 
@@ -671,6 +681,9 @@ const Attendance = () => {
   const [isLeaveDialogOpen, setIsLeaveDialogOpen] = useState(false);
   const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { getActiveLeaveTypes } = useLeaveTypes();
 
   // Performance monitoring
   useEffect(() => {
@@ -742,7 +755,7 @@ const Attendance = () => {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Attendance Management
@@ -751,11 +764,51 @@ const Attendance = () => {
               Track attendance for students and staff ({attendanceRecords.length} records)
             </p>
           </div>
-          <div className="flex space-x-2">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate('/students')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Students
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/tutors')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Tutors
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/executives')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Executives
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/managers')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              Managers
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => navigate('/hr')}
+              className="gap-2"
+            >
+              <Users className="h-4 w-4" />
+              HR
+            </Button>
             <Dialog open={isLeaveDialogOpen} onOpenChange={setIsLeaveDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="gap-2">
+                  <Plus className="w-4 h-4" />
                   Leave Request
                 </Button>
               </DialogTrigger>
@@ -764,53 +817,93 @@ const Attendance = () => {
 
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-primary text-primary-foreground">
-                  <Plus className="w-4 h-4 mr-2" />
+                <Button className="gap-2">
+                  <Plus className="w-4 h-4" />
                   Mark Attendance
                 </Button>
               </DialogTrigger>
               <AddAttendanceDialog />
-            </Dialog>
-          </div>
+          </Dialog>
         </div>
+      </div>
 
-        <Tabs defaultValue="attendance" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
-            <TabsTrigger value="leave">Leave Requests</TabsTrigger>
-            <TabsTrigger value="upload">CSV Upload</TabsTrigger>
-            <TabsTrigger value="reports">Reports</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="attendance" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="attendance">Daily Attendance</TabsTrigger>
+          <TabsTrigger value="leave">Leave Requests</TabsTrigger>
+          <TabsTrigger value="upload">CSV Upload</TabsTrigger>
+          <TabsTrigger value="reports">Reports</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="attendance" className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
+        <TabsContent value="attendance" className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
                 <SearchComponent 
                   searchTerm={searchTerm} 
                   onSearchChange={handleSearchChange} 
                 />
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline">
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={setSelectedDate}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <CustomDatePicker
+                  value={selectedDate}
+                  onChange={setSelectedDate}
+                  placeholder="Pick a date"
+                  size="md"
+                  className="min-w-[200px] sm:min-w-[240px]"
+                />
               </div>
-              <Button variant="outline" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/students')}
+                    className="text-xs sm:text-sm"
+                  >
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    Students
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/tutors')}
+                    className="text-xs sm:text-sm"
+                  >
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    Tutors
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/executives')}
+                    className="text-xs sm:text-sm"
+                  >
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    Executives
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/managers')}
+                    className="text-xs sm:text-sm"
+                  >
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    Managers
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/hr')}
+                    className="text-xs sm:text-sm"
+                  >
+                    <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    HR
+                  </Button>
             </div>
+            <Button variant="outline" size="sm">
+              <Download className="w-4 h-4 mr-2" />
+              Export
+            </Button>
+              </div>
+          </div>
 
             {filteredRecords.length > 0 ? (
               <VirtualList
@@ -824,11 +917,63 @@ const Attendance = () => {
                 <p className="text-muted-foreground">
                   No attendance records found matching your search.
                 </p>
-              </div>
+                      </div>
             )}
-          </TabsContent>
+        </TabsContent>
 
-          <TabsContent value="leave" className="space-y-4">
+        <TabsContent value="leave" className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <h3 className="text-lg font-semibold">Leave Requests</h3>
+                    </div>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/students')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Students
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/tutors')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Tutors
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/executives')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Executives
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/managers')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Managers
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/hr')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  HR
+                </Button>
+                  </div>
+            </div>
             {leaveRequests.length > 0 ? (
               <VirtualList
                 items={leaveRequests}
@@ -838,110 +983,214 @@ const Attendance = () => {
               />
             ) : (
               <div className="text-center py-8">
-                <p className="text-muted-foreground">
+                      <p className="text-muted-foreground">
                   No leave requests found.
-                </p>
-              </div>
+                      </p>
+                    </div>
             )}
           </TabsContent>
 
           <TabsContent value="upload" className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <h3 className="text-lg font-semibold">Upload Attendance</h3>
+                    </div>
+              <div className="flex items-center space-x-1">
+                          <Button
+                  variant="outline"
+                            size="sm"
+                  onClick={() => navigate('/students')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Students
+                </Button>
+                <Button
+                            variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/tutors')}
+                  className="text-xs sm:text-sm"
+                          >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Tutors
+                          </Button>
+                          <Button
+                  variant="outline"
+                            size="sm"
+                  onClick={() => navigate('/executives')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Executives
+                </Button>
+                <Button
+                            variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/managers')}
+                  className="text-xs sm:text-sm"
+                          >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Managers
+                          </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/hr')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  HR
+                </Button>
+                    </div>
+                  </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload Attendance CSV</CardTitle>
+              <CardDescription>
+                Upload attendance data using CSV file format
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
+                <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
+                <p className="text-sm text-muted-foreground mb-2">
+                  Drop your CSV file here or click to browse
+                </p>
+                <Input type="file" accept=".csv" className="max-w-xs mx-auto" />
+              </div>
+              <div className="flex justify-between">
+                <Button variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Download Sample Template
+                </Button>
+                <Button>Upload CSV</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reports" className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-2">
+                <h3 className="text-lg font-semibold">Attendance Reports</h3>
+              </div>
+              <div className="flex items-center space-x-1">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/students')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Students
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/tutors')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Tutors
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/executives')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Executives
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/managers')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  Managers
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigate('/hr')}
+                  className="text-xs sm:text-sm"
+                >
+                  <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                  HR
+                </Button>
+              </div>
+            </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <Card>
               <CardHeader>
-                <CardTitle>Upload Attendance CSV</CardTitle>
-                <CardDescription>
-                  Upload attendance data using CSV file format
-                </CardDescription>
+                <CardTitle className="flex items-center">
+                  <Users className="w-5 h-5 mr-2" />
+                  Today's Summary
+                </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
-                  <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-4" />
-                  <p className="text-sm text-muted-foreground mb-2">
-                    Drop your CSV file here or click to browse
-                  </p>
-                  <Input type="file" accept=".csv" className="max-w-xs mx-auto" />
-                </div>
-                <div className="flex justify-between">
-                  <Button variant="outline">
-                    <Download className="w-4 h-4 mr-2" />
-                    Download Sample Template
-                  </Button>
-                  <Button>Upload CSV</Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="reports" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Users className="w-5 h-5 mr-2" />
-                    Today's Summary
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Present:</span>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Present:</span>
                       <span className="font-semibold text-success">
                         {attendanceRecords.filter(r => r.status === "Present").length}
                       </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Absent:</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Absent:</span>
                       <span className="font-semibold text-destructive">
                         {attendanceRecords.filter(r => r.status === "Absent").length}
                       </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Late:</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Late:</span>
                       <span className="font-semibold text-warning">
                         {attendanceRecords.filter(r => r.status === "Late").length}
                       </span>
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Monthly Report</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Average Attendance:</span>
-                      <span className="font-semibold">92%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Total Working Days:</span>
-                      <span className="font-semibold">22</span>
-                    </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Monthly Report</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Average Attendance:</span>
+                    <span className="font-semibold">92%</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="flex justify-between">
+                    <span>Total Working Days:</span>
+                    <span className="font-semibold">22</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Actions</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Download className="w-4 h-4 mr-2" />
-                    Daily Report
-                  </Button>
-                  <Button variant="outline" size="sm" className="w-full">
-                    <Download className="w-4 h-4 mr-2" />
-                    Monthly Report
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" size="sm" className="w-full">
+                  <Download className="w-4 h-4 mr-2" />
+                  Daily Report
+                </Button>
+                <Button variant="outline" size="sm" className="w-full">
+                  <Download className="w-4 h-4 mr-2" />
+                  Monthly Report
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
     </>
   );
 };

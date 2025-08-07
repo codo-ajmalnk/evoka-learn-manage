@@ -26,6 +26,7 @@ import {
   Users,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 // Lazy load components for better performance
@@ -384,61 +385,34 @@ const FilterTabs = memo(({
   executives: Executive[];
   userRole: string;
 }) => {
-  const getTabsForRole = useCallback(() => {
-    switch (userRole) {
-      case "admin":
-      case "hr":
-        return [
-          { key: "all", label: `All Executives (${executives.length})` },
-          {
-            key: "active",
-            label: `Active (${
-              executives.filter((e) => e.status === "active").length
-            })`,
-          },
-          {
-            key: "inactive",
-            label: `Inactive (${
-              executives.filter((e) => e.status === "inactive").length
-            })`,
-          },
-        ];
-      case "manager":
-        return [
-          { key: "all", label: `All Executives (${executives.length})` },
-          {
-            key: "my",
-            label: `My Executives (${
-              executives.filter((e) => e.status === "active").length
-            })`,
-          },
-          {
-            key: "inactive",
-            label: `Inactive (${
-              executives.filter((e) => e.status === "inactive").length
-            })`,
-          },
-        ];
-      default:
-        return [{ key: "all", label: `All Executives (${executives.length})` }];
-    }
-  }, [executives, userRole]);
-
-  const tabs = getTabsForRole();
+  const activeCount = useMemo(() => executives.filter((e) => e.status === "active").length, [executives]);
+  const inactiveCount = useMemo(() => executives.filter((e) => e.status === "inactive").length, [executives]);
 
   return (
-    <div className="flex gap-2 mb-4">
-      {tabs.map((tab) => (
-        <Button
-          key={tab.key}
-          variant={activeTab === tab.key ? "default" : "outline"}
-          size="sm"
-          onClick={() => onTabChange(tab.key)}
-        >
-          {tab.label}
-        </Button>
-      ))}
-    </div>
+    <div className="mt-4">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+        <TabsList className="flex flex-wrap w-full gap-1 h-auto p-1">
+          <TabsTrigger 
+            value="all" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            All Executives ({executives.length})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="active" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Active ({activeCount})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="inactive" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Inactive ({inactiveCount})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+                    </div>
   );
 });
 
@@ -509,9 +483,9 @@ const VirtualTable = memo(({
               ))}
             </tbody>
           </table>
-        </div>
-      </div>
-    </div>
+                    </div>
+                  </div>
+          </div>
   );
 });
 
@@ -525,6 +499,8 @@ const Executives = () => {
   const [selectedExecutive, setSelectedExecutive] = useState<Executive | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Performance monitoring
   useEffect(() => {
@@ -553,8 +529,6 @@ const Executives = () => {
         return matchesSearch && executive.status === "active";
       if (activeTab === "inactive")
         return matchesSearch && executive.status === "inactive";
-      if (activeTab === "my" && userRole === "manager")
-        return matchesSearch && executive.status === "active";
 
       return matchesSearch;
     });
@@ -563,7 +537,7 @@ const Executives = () => {
     performanceLogger.logRender(endTime - startTime);
 
     return filtered;
-  }, [executives, debouncedSearchTerm, activeTab, userRole]);
+  }, [executives, debouncedSearchTerm, activeTab]);
 
   // Throttled handlers
   const handleEdit = useThrottle((executive: Executive) => {
@@ -608,10 +582,19 @@ const Executives = () => {
     setSearchTerm(value);
   }, []);
 
-  // Handle tab change
+  // Handle URL parameters for active tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Handle tab change with URL update
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
-  }, []);
+    setSearchParams({ tab: value });
+  }, [setSearchParams]);
 
   if (isLoading) {
     return <TableSkeleton title="Executives Management" subtitle="Manage executive profiles and information" />;
@@ -627,21 +610,55 @@ const Executives = () => {
               Manage executive profiles and information ({executives.length} total)
           </p>
         </div>
-        {(userRole === "admin" ||
-          userRole === "hr" ||
-          userRole === "manager") && (
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/students')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Students
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/tutors')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Tutors
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/managers')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Managers
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/hr')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            HR
+          </Button>
+          {(userRole === "admin" ||
+            userRole === "hr" ||
+            userRole === "manager") && (
+              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
             <Plus className="h-4 w-4" />
             Add New Executive
           </Button>
-              </DialogTrigger>
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyAddExecutiveDialog />
-              </Suspense>
-            </Dialog>
+                </DialogTrigger>
+                <Suspense fallback={<div>Loading...</div>}>
+                  <LazyAddExecutiveDialog />
+                </Suspense>
+              </Dialog>
         )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

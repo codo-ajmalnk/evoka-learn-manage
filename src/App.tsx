@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { BatchProvider } from "@/contexts/BatchContext";
+import { LeaveTypesProvider } from "@/contexts/LeaveTypesContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
@@ -28,9 +29,10 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <BatchProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
+        <LeaveTypesProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
@@ -50,6 +52,7 @@ const App = () => (
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </LeaveTypesProvider>
       </BatchProvider>
     </TooltipProvider>
   </QueryClientProvider>

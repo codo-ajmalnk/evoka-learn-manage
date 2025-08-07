@@ -33,8 +33,10 @@ import {
   Search,
   Star,
   Trash2,
+  Users,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
 // Lazy load components for better performance
@@ -556,6 +558,8 @@ const Assignments = () => {
   const [selectedAssignment, setSelectedAssignment] = useState<Assignment | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Performance monitoring
   useEffect(() => {
@@ -660,10 +664,19 @@ const Assignments = () => {
     setSearchTerm(value);
   }, []);
 
-  // Handle tab change
+  // Handle URL parameters for active tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Handle tab change with URL update
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
-  }, []);
+    setSearchParams({ tab: value });
+  }, [setSearchParams]);
 
   if (isLoading) {
     return <CardGridSkeleton cards={8} showHeader={true} />;
@@ -679,19 +692,61 @@ const Assignments = () => {
               Track and manage student assignments ({assignments.length} total)
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/students')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Students
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/tutors')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Tutors
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/executives')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Executives
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/managers')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Managers
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/hr')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            HR
+          </Button>
         {(userRole === "admin" || userRole === "tutor") && (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
-          <Button className="flex items-center gap-2">
+                <Button className="gap-2">
             <Plus className="h-4 w-4" />
                   Add Assignment
           </Button>
               </DialogTrigger>
-                             <Suspense fallback={<div>Loading...</div>}>
-                 <LazyAddAssignmentDialog />
-               </Suspense>
+              <Suspense fallback={<div>Loading...</div>}>
+                <LazyAddAssignmentDialog />
+              </Suspense>
             </Dialog>
         )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

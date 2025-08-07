@@ -51,6 +51,7 @@ import {
   UserX,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
@@ -222,8 +223,8 @@ const getDummyTutors = (() => {
       religion: Math.random() > 0.3 ? "Hindu" : undefined,
       address: `${Math.floor(Math.random() * 999) + 1} Street, City ${index + 1}`,
       pin: `${Math.floor(Math.random() * 900000) + 100000}`,
-      qualification: ["M.A. in Advertising", "M.Des Visual Communication", "B.Tech Computer Science"][Math.floor(Math.random() * 3)],
-      experience: `${Math.floor(Math.random() * 15) + 1} years`,
+      qualification: ["M.A. in Advertising", "M.Des Visual Communication", "B.Tech Computer Science", "Guest Lecturer - Digital Marketing", "Guest Faculty - Design"][Math.floor(Math.random() * 5)],
+      experience: Math.random() > 0.8 ? "Guest Lecturer - 5 years" : `${Math.floor(Math.random() * 15) + 1} years`,
       subjects: ["Creative Writing", "Brand Strategy", "Graphic Design", "UI/UX Design", "Full Stack Development"].slice(0, Math.floor(Math.random() * 3) + 1),
       batches: [],
       salary: Math.floor(Math.random() * 30000) + 30000,
@@ -430,30 +431,38 @@ const FilterTabs = memo(({
 }) => {
   const activeCount = useMemo(() => tutors.filter((t) => t.status === "active").length, [tutors]);
   const inactiveCount = useMemo(() => tutors.filter((t) => t.status === "inactive").length, [tutors]);
+  const guestLecturersCount = useMemo(() => tutors.filter((t) => t.experience.includes("Guest") || t.qualification.includes("Guest")).length, [tutors]);
 
   return (
-    <div className="flex gap-2 mb-4">
-      <Button
-        variant={activeTab === "all" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onTabChange("all")}
-      >
-        All Tutors ({tutors.length})
-      </Button>
-      <Button
-        variant={activeTab === "active" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onTabChange("active")}
-      >
-        Active ({activeCount})
-      </Button>
-      <Button
-        variant={activeTab === "inactive" ? "default" : "outline"}
-        size="sm"
-        onClick={() => onTabChange("inactive")}
-      >
-        Inactive ({inactiveCount})
-      </Button>
+    <div className="mt-4">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
+        <TabsList className="flex flex-wrap w-full gap-1 h-auto p-1">
+          <TabsTrigger 
+            value="all" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            All Tutors ({tutors.length})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="guest" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Guest Lectures ({guestLecturersCount})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="active" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Active ({activeCount})
+          </TabsTrigger>
+          <TabsTrigger 
+            value="inactive" 
+            className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
+          >
+            Inactive ({inactiveCount})
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
     </div>
   );
 });
@@ -543,6 +552,8 @@ const Tutors = () => {
   >(null);
   const { toast } = useToast();
   const form = useForm();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Performance monitoring
   useEffect(() => {
@@ -567,6 +578,8 @@ const Tutors = () => {
       return matchesSearch && tutor.status === "active";
     if (activeTab === "inactive")
       return matchesSearch && tutor.status === "inactive";
+    if (activeTab === "guest")
+      return matchesSearch && (tutor.experience.includes("Guest") || tutor.qualification.includes("Guest"));
 
     return matchesSearch;
   });
@@ -644,10 +657,19 @@ const Tutors = () => {
     setSearchTerm(value);
   }, []);
 
-  // Handle tab change
+  // Handle URL parameters for active tab
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
+
+  // Handle tab change with URL update
   const handleTabChange = useCallback((value: string) => {
     setActiveTab(value);
-  }, []);
+    setSearchParams({ tab: value });
+  }, [setSearchParams]);
 
   if (isLoading) {
     return <TableSkeleton title="Tutors" subtitle="Manage tutor profiles and information" />;
@@ -663,9 +685,42 @@ const Tutors = () => {
               Manage tutor profiles and information ({tutors.length} total)
           </p>
         </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/students')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Students
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/executives')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Executives
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/managers')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            Managers
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/hr')}
+            className="gap-2"
+          >
+            <Users className="h-4 w-4" />
+            HR
+          </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="flex items-center gap-2">
+              <Button className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add New Tutor
               </Button>
@@ -674,6 +729,7 @@ const Tutors = () => {
               <LazyAddTutorDialog />
             </Suspense>
           </Dialog>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

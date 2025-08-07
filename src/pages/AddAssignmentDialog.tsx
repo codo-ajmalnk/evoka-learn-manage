@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 import { memo, useState } from "react";
 
 const AddAssignmentDialog = memo(() => {
@@ -29,13 +30,13 @@ const AddAssignmentDialog = memo(() => {
     batchName: "",
     tutorId: "",
     tutorName: "",
-    dueDate: "",
+    dueDate: null as Date | null,
     maxGrade: "100",
     maxStars: "5",
     attachments: [] as File[],
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | Date | null) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -189,12 +190,12 @@ const AddAssignmentDialog = memo(() => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="dueDate">Due Date *</Label>
-              <Input
-                id="dueDate"
-                type="date"
+              <CustomDatePicker
                 value={formData.dueDate}
-                onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                required
+                onChange={(date) => handleInputChange("dueDate", date)}
+                placeholder="Select due date"
+                size="md"
+                className="w-full"
               />
             </div>
             <div className="space-y-2">
