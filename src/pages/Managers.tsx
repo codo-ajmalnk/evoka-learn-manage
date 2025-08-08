@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import {
   Calendar,
   Crown,
@@ -240,16 +240,21 @@ const ManagerRow = memo(({
     onView(manager);
   }, [manager, setSelectedManager, onView]);
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onEdit(manager);
   }, [manager, onEdit]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onDelete(manager.id);
   }, [manager.id, onDelete]);
 
   return (
-    <tr className="border-b hover:bg-muted/50">
+    <tr 
+      className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+      onClick={handleView}
+    >
       <td className="p-2">
         <div className="flex items-center gap-3">
           <Avatar>
@@ -308,22 +313,6 @@ const ManagerRow = memo(({
       </td>
       <td className="p-2">
         <div className="flex items-center gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleView}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            {selectedManager && (
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyManagerDetailsDialog manager={selectedManager} />
-              </Suspense>
-            )}
-          </Dialog>
           <Button
             variant="ghost"
             size="sm"
@@ -444,44 +433,55 @@ const VirtualTable = memo(({
   } = useVirtualScrolling(managers, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: CONTAINER_HEIGHT }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Manager</th>
-                <th className="text-left p-2">ID</th>
-                <th className="text-left p-2">Contact</th>
-                <th className="text-left p-2">Department</th>
-                <th className="text-left p-2">Team Size</th>
-                <th className="text-left p-2">Salary</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleItems.map((manager) => (
-                <ManagerRow
-                  key={manager.id}
-                  manager={manager}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onView={onView}
-                  selectedManager={selectedManager}
-                  setSelectedManager={setSelectedManager}
-                />
-              ))}
-            </tbody>
-          </table>
+    <>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="overflow-auto"
+        style={{ height: CONTAINER_HEIGHT }}
+      >
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          <div style={{ transform: `translateY(${offsetY}px)` }}>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Manager</th>
+                  <th className="text-left p-2">ID</th>
+                  <th className="text-left p-2">Contact</th>
+                  <th className="text-left p-2">Department</th>
+                  <th className="text-left p-2">Team Size</th>
+                  <th className="text-left p-2">Salary</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleItems.map((manager) => (
+                  <ManagerRow
+                    key={manager.id}
+                    manager={manager}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    selectedManager={selectedManager}
+                    setSelectedManager={setSelectedManager}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+      
+      {/* Manager Details Dialog */}
+      {selectedManager && (
+        <Dialog open={!!selectedManager} onOpenChange={() => setSelectedManager(null)}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyManagerDetailsDialog manager={selectedManager} />
+          </Suspense>
+        </Dialog>
+      )}
+    </>
   );
 });
 
@@ -648,9 +648,9 @@ const Managers = () => {
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Add New Manager
-              </Button>
+          <Plus className="h-4 w-4" />
+          Add New Manager
+        </Button>
             </DialogTrigger>
             <Suspense fallback={<div>Loading...</div>}>
               <LazyAddManagerDialog />

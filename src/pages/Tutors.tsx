@@ -277,16 +277,21 @@ const TutorRow = memo(({
     onView(tutor);
   }, [tutor, setSelectedTutor, onView]);
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onEdit(tutor, "personal");
   }, [tutor, onEdit]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onDelete(tutor.id);
   }, [tutor.id, onDelete]);
 
   return (
-    <tr className="border-b hover:bg-muted/50">
+    <tr 
+      className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+      onClick={handleView}
+    >
       <td className="p-2">
         <div className="flex items-center gap-3">
           <Avatar>
@@ -354,22 +359,6 @@ const TutorRow = memo(({
       </td>
       <td className="p-2">
         <div className="flex items-center gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleView}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            {selectedTutor && (
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyTutorDetailsDialog tutor={selectedTutor} />
-              </Suspense>
-            )}
-          </Dialog>
           <Button
             variant="ghost"
             size="sm"
@@ -497,45 +486,56 @@ const VirtualTable = memo(({
   } = useVirtualScrolling(tutors, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: CONTAINER_HEIGHT }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Tutor</th>
-                <th className="text-left p-2">ID</th>
-                <th className="text-left p-2">Contact</th>
-                <th className="text-left p-2">Subjects</th>
-                <th className="text-left p-2">Salary</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleItems.map((tutor) => (
-                <TutorRow
-                  key={tutor.id}
-                  tutor={tutor}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onView={onView}
-                  selectedTutor={selectedTutor}
-                  setSelectedTutor={setSelectedTutor}
-                />
-              ))}
-            </tbody>
-          </table>
+    <>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="overflow-auto"
+        style={{ height: CONTAINER_HEIGHT }}
+      >
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          <div style={{ transform: `translateY(${offsetY}px)` }}>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Tutor</th>
+                  <th className="text-left p-2">ID</th>
+                  <th className="text-left p-2">Contact</th>
+                  <th className="text-left p-2">Subjects</th>
+                  <th className="text-left p-2">Salary</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleItems.map((tutor) => (
+                  <TutorRow
+                    key={tutor.id}
+                    tutor={tutor}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    selectedTutor={selectedTutor}
+                    setSelectedTutor={setSelectedTutor}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+      {/* Tutor Details Dialog */}
+      {selectedTutor && (
+        <Dialog open={!!selectedTutor} onOpenChange={() => setSelectedTutor(null)}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyTutorDetailsDialog tutor={selectedTutor} />
+          </Suspense>
+        </Dialog>
+      )}
+    </>
   );
-});
+}); 
+
 
 VirtualTable.displayName = "VirtualTable";
 
@@ -683,53 +683,53 @@ const Tutors = () => {
           <h1 className="text-3xl font-bold">Tutors Management</h1>
           <p className="text-muted-foreground">
               Manage tutor profiles and information ({tutors.length} total)
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
             onClick={() => navigate('/students')}
             className="gap-2"
-          >
+              >
             <Users className="h-4 w-4" />
             Students
-          </Button>
-          <Button
-            variant="outline"
+              </Button>
+                          <Button
+                            variant="outline"
             onClick={() => navigate('/executives')}
             className="gap-2"
           >
             <Users className="h-4 w-4" />
             Executives
-          </Button>
-          <Button
-            variant="outline"
+                          </Button>
+              <Button
+                variant="outline"
             onClick={() => navigate('/managers')}
             className="gap-2"
-          >
+              >
             <Users className="h-4 w-4" />
             Managers
-          </Button>
-          <Button
-            variant="outline"
+              </Button>
+              <Button
+                variant="outline"
             onClick={() => navigate('/hr')}
             className="gap-2"
-          >
+              >
             <Users className="h-4 w-4" />
             HR
-          </Button>
+              </Button>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
                 Add New Tutor
-              </Button>
+                      </Button>
             </DialogTrigger>
             <Suspense fallback={<div>Loading...</div>}>
               <LazyAddTutorDialog />
             </Suspense>
           </Dialog>
-        </div>
+                    </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

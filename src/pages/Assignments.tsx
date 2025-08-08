@@ -243,11 +243,13 @@ const AssignmentRow = memo(({
     onView(assignment);
   }, [assignment, setSelectedAssignment, onView]);
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onEdit(assignment);
   }, [assignment, onEdit]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onDelete(assignment.id);
   }, [assignment.id, onDelete]);
 
@@ -275,7 +277,7 @@ const AssignmentRow = memo(({
   }, []);
 
   return (
-    <tr className="border-b hover:bg-muted/50">
+    <tr className="border-b hover:bg-muted/50 cursor-pointer transition-colors" onClick={handleView}>
       <td className="p-2">
           <div>
           <p className="font-medium">{assignment.title}</p>
@@ -356,22 +358,6 @@ const AssignmentRow = memo(({
       </td>
       <td className="p-2">
         <div className="flex items-center gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleView}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            {selectedAssignment && (
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyAssignmentDetailsDialog assignment={selectedAssignment} />
-              </Suspense>
-            )}
-          </Dialog>
           <Button
             variant="ghost"
             size="sm"
@@ -506,45 +492,56 @@ const VirtualTable = memo(({
   } = useVirtualScrolling(assignments, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: CONTAINER_HEIGHT }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Assignment</th>
-                <th className="text-left p-2">Student</th>
-                <th className="text-left p-2">Category</th>
-                <th className="text-left p-2">Due Date</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Grade</th>
-                <th className="text-left p-2">Progress</th>
-                <th className="text-left p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleItems.map((assignment) => (
-                <AssignmentRow
-                  key={assignment.id}
-                  assignment={assignment}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onView={onView}
-                  selectedAssignment={selectedAssignment}
-                  setSelectedAssignment={setSelectedAssignment}
-                  userRole={userRole}
-                />
-              ))}
-            </tbody>
-          </table>
+    <>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="overflow-auto"
+        style={{ height: CONTAINER_HEIGHT }}
+      >
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          <div style={{ transform: `translateY(${offsetY}px)` }}>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Assignment</th>
+                  <th className="text-left p-2">Student</th>
+                  <th className="text-left p-2">Category</th>
+                  <th className="text-left p-2">Due Date</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Grade</th>
+                  <th className="text-left p-2">Progress</th>
+                  <th className="text-left p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleItems.map((assignment) => (
+                  <AssignmentRow
+                    key={assignment.id}
+                    assignment={assignment}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    selectedAssignment={selectedAssignment}
+                    setSelectedAssignment={setSelectedAssignment}
+                    userRole={userRole}
+                  />
+                ))}
+              </tbody>
+            </table>
                   </div>
                 </div>
           </div>
+
+      {/* Assignment Details Dialog */}
+      {selectedAssignment && (
+        <Dialog open={!!selectedAssignment} onOpenChange={() => setSelectedAssignment(null)}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyAssignmentDetailsDialog assignment={selectedAssignment} />
+          </Suspense>
+        </Dialog>
+      )}
+    </>
   );
 });
 

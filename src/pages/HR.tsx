@@ -240,16 +240,21 @@ const HRRow = memo(({
     onView(hr);
   }, [hr, setSelectedHR, onView]);
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onEdit(hr);
   }, [hr, onEdit]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onDelete(hr.id);
   }, [hr.id, onDelete]);
 
   return (
-    <tr className="border-b hover:bg-muted/50">
+    <tr 
+      className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+      onClick={handleView}
+    >
       <td className="p-2">
         <div className="flex items-center gap-3">
           <Avatar>
@@ -305,22 +310,6 @@ const HRRow = memo(({
       </td>
       <td className="p-2">
         <div className="flex items-center gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleView}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            {selectedHR && (
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyHRDetailsDialog hr={selectedHR} />
-              </Suspense>
-            )}
-          </Dialog>
           <Button
             variant="ghost"
             size="sm"
@@ -445,45 +434,56 @@ const VirtualTable = memo(({
   } = useVirtualScrolling(hrPersons, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: CONTAINER_HEIGHT }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">HR Personnel</th>
-                <th className="text-left p-2">ID</th>
-                <th className="text-left p-2">Contact</th>
-                <th className="text-left p-2">Specialization</th>
-                <th className="text-left p-2">Experience</th>
-                <th className="text-left p-2">Salary</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleItems.map((hr) => (
-                <HRRow
-                  key={hr.id}
-                  hr={hr}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onView={onView}
-                  selectedHR={selectedHR}
-                  setSelectedHR={setSelectedHR}
-                  userRole={userRole}
-                />
-              ))}
-            </tbody>
-          </table>
+    <>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="overflow-auto"
+        style={{ height: CONTAINER_HEIGHT }}
+      >
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          <div style={{ transform: `translateY(${offsetY}px)` }}>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">HR Personnel</th>
+                  <th className="text-left p-2">ID</th>
+                  <th className="text-left p-2">Contact</th>
+                  <th className="text-left p-2">Specialization</th>
+                  <th className="text-left p-2">Experience</th>
+                  <th className="text-left p-2">Salary</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleItems.map((hr) => (
+                  <HRRow
+                    key={hr.id}
+                    hr={hr}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    selectedHR={selectedHR}
+                    setSelectedHR={setSelectedHR}
+                    userRole={userRole}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-    </div>
+      
+      {/* HR Details Dialog */}
+      {selectedHR && (
+        <Dialog open={!!selectedHR} onOpenChange={() => setSelectedHR(null)}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyHRDetailsDialog hr={selectedHR} />
+          </Suspense>
+        </Dialog>
+      )}
+    </>
   );
 });
 
@@ -653,19 +653,19 @@ const HR = () => {
             <Users className="h-4 w-4" />
             Managers
           </Button>
-          {userRole === "admin" && (
+        {userRole === "admin" && (
             <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
               <DialogTrigger asChild>
                 <Button className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  Add New HR
-                </Button>
+            <Plus className="h-4 w-4" />
+            Add New HR
+          </Button>
               </DialogTrigger>
               <Suspense fallback={<div>Loading...</div>}>
                 <LazyAddHRDialog />
               </Suspense>
             </Dialog>
-          )}
+        )}
         </div>
       </div>
 

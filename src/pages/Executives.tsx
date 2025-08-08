@@ -240,16 +240,21 @@ const ExecutiveRow = memo(({
     onView(executive);
   }, [executive, setSelectedExecutive, onView]);
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onEdit(executive);
   }, [executive, onEdit]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onDelete(executive.id);
   }, [executive.id, onDelete]);
 
   return (
-    <tr className="border-b hover:bg-muted/50">
+    <tr 
+      className="border-b hover:bg-muted/50 cursor-pointer transition-colors"
+      onClick={handleView}
+    >
       <td className="p-2">
         <div className="flex items-center gap-3">
           <Avatar>
@@ -304,22 +309,6 @@ const ExecutiveRow = memo(({
       </td>
       <td className="p-2">
         <div className="flex items-center gap-2">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleView}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-            </DialogTrigger>
-            {selectedExecutive && (
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyExecutiveDetailsDialog executive={selectedExecutive} />
-              </Suspense>
-            )}
-          </Dialog>
           <Button
             variant="ghost"
             size="sm"
@@ -448,44 +437,54 @@ const VirtualTable = memo(({
   } = useVirtualScrolling(executives, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: CONTAINER_HEIGHT }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          <table className="w-full">
-            <thead>
-              <tr className="border-b">
-                <th className="text-left p-2">Executive</th>
-                <th className="text-left p-2">ID</th>
-                <th className="text-left p-2">Contact</th>
-                <th className="text-left p-2">Department</th>
-                <th className="text-left p-2">Salary</th>
-                <th className="text-left p-2">Status</th>
-                <th className="text-left p-2">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleItems.map((executive) => (
-                <ExecutiveRow
-                  key={executive.id}
-                  executive={executive}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onView={onView}
-                  selectedExecutive={selectedExecutive}
-                  setSelectedExecutive={setSelectedExecutive}
-                  userRole={userRole}
-                />
-              ))}
-            </tbody>
-          </table>
-                    </div>
-                  </div>
+    <>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="overflow-auto"
+        style={{ height: CONTAINER_HEIGHT }}
+      >
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          <div style={{ transform: `translateY(${offsetY}px)` }}>
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-2">Executive</th>
+                  <th className="text-left p-2">ID</th>
+                  <th className="text-left p-2">Contact</th>
+                  <th className="text-left p-2">Department</th>
+                  <th className="text-left p-2">Salary</th>
+                  <th className="text-left p-2">Status</th>
+                  <th className="text-left p-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleItems.map((executive) => (
+                  <ExecutiveRow
+                    key={executive.id}
+                    executive={executive}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    selectedExecutive={selectedExecutive}
+                    setSelectedExecutive={setSelectedExecutive}
+                    userRole={userRole}
+                  />
+                ))}
+              </tbody>
+            </table>
           </div>
+        </div>
+      </div>
+      {/* Executive Details Dialog */}
+      {selectedExecutive && (
+        <Dialog open={!!selectedExecutive} onOpenChange={() => setSelectedExecutive(null)}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyExecutiveDetailsDialog executive={selectedExecutive} />
+          </Suspense>
+        </Dialog>
+      )}
+    </>
   );
 });
 

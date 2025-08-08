@@ -209,11 +209,13 @@ const JournalCard = memo(({
     onView(entry);
   }, [entry, setSelectedEntry, onView]);
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onEdit(entry);
   }, [entry, onEdit]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onDelete(entry.id);
   }, [entry.id, onDelete]);
 
@@ -231,7 +233,10 @@ const JournalCard = memo(({
   }, []);
 
   return (
-    <Card>
+    <Card 
+      className="cursor-pointer hover:bg-muted/50 transition-colors"
+      onClick={handleView}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -279,18 +284,6 @@ const JournalCard = memo(({
             )}
           </div>
           <div className="flex items-center space-x-2">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="sm" onClick={handleView}>
-                  <Eye className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
-              {selectedEntry && (
-                <Suspense fallback={<div>Loading...</div>}>
-                  <LazyJournalDetailsDialog entry={selectedEntry} />
-                </Suspense>
-              )}
-            </Dialog>
             <Button variant="ghost" size="sm" onClick={handleEdit}>
               <Edit className="w-4 h-4" />
             </Button>
@@ -395,12 +388,13 @@ const VirtualGrid = memo(({
   } = useVirtualScrolling(entries, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: CONTAINER_HEIGHT }}
-    >
+    <>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="overflow-auto"
+        style={{ height: CONTAINER_HEIGHT }}
+      >
       <div style={{ height: totalHeight, position: 'relative' }}>
         <div style={{ transform: `translateY(${offsetY}px)` }}>
           <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
@@ -418,7 +412,17 @@ const VirtualGrid = memo(({
           </div>
         </div>
       </div>
-    </div>
+      </div>
+      
+      {/* Journal Details Dialog */}
+      {selectedEntry && (
+        <Dialog open={!!selectedEntry} onOpenChange={() => setSelectedEntry(null)}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyJournalDetailsDialog entry={selectedEntry} />
+          </Suspense>
+        </Dialog>
+      )}
+    </>
   );
 });
 

@@ -228,16 +228,22 @@ const StudentRow = memo(({
     onView(student);
   }, [student, setSelectedStudent, onView]);
 
-  const handleEdit = useCallback(() => {
+  const handleEdit = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onEdit(student);
   }, [student, onEdit]);
 
-  const handleDelete = useCallback(() => {
+  const handleDelete = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
     onDelete(student.id);
   }, [student.id, onDelete]);
 
   return (
-                  <TableRow key={student.id}>
+                  <TableRow 
+                    key={student.id}
+                    className="cursor-pointer hover:bg-muted/50 transition-colors"
+                    onClick={handleView}
+                  >
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar>
@@ -306,33 +312,17 @@ const StudentRow = memo(({
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-1">
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                onClick={handleView}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          </DialogTrigger>
-                          {selectedStudent && (
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyStudentDetailsDialog student={selectedStudent} />
-              </Suspense>
-                          )}
-                        </Dialog>
                         <Button
                           variant="ghost"
                           size="sm"
-            onClick={handleEdit}
+                          onClick={handleEdit}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-            onClick={handleDelete}
+                          onClick={handleDelete}
                           className="text-destructive hover:text-destructive"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -454,44 +444,55 @@ const VirtualTable = memo(({
   } = useVirtualScrolling(students, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
-    <div 
-      ref={containerRef}
-      onScroll={handleScroll}
-      className="overflow-auto"
-      style={{ height: CONTAINER_HEIGHT }}
-    >
-      <div style={{ height: totalHeight, position: 'relative' }}>
-        <div style={{ transform: `translateY(${offsetY}px)` }}>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>ID</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Batch</TableHead>
-                <TableHead>Fees Status</TableHead>
-                <TableHead>Attendance</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {visibleItems.map((student) => (
-                <StudentRow
-                  key={student.id}
-                  student={student}
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onView={onView}
-                  selectedStudent={selectedStudent}
-                  setSelectedStudent={setSelectedStudent}
-                />
+    <>
+      <div 
+        ref={containerRef}
+        onScroll={handleScroll}
+        className="overflow-auto"
+        style={{ height: CONTAINER_HEIGHT }}
+      >
+        <div style={{ height: totalHeight, position: 'relative' }}>
+          <div style={{ transform: `translateY(${offsetY}px)` }}>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Student</TableHead>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Batch</TableHead>
+                  <TableHead>Fees Status</TableHead>
+                  <TableHead>Attendance</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleItems.map((student) => (
+                  <StudentRow
+                    key={student.id}
+                    student={student}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onView={onView}
+                    selectedStudent={selectedStudent}
+                    setSelectedStudent={setSelectedStudent}
+                  />
                 ))}
               </TableBody>
             </Table>
           </div>
+        </div>
       </div>
-    </div>
+      
+      {/* Student Details Dialog */}
+      {selectedStudent && (
+        <Dialog open={!!selectedStudent} onOpenChange={() => setSelectedStudent(null)}>
+          <Suspense fallback={<div>Loading...</div>}>
+            <LazyStudentDetailsDialog student={selectedStudent} />
+          </Suspense>
+        </Dialog>
+      )}
+    </>
   );
 });
 
