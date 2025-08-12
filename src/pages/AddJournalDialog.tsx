@@ -16,7 +16,33 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { CustomDatePicker } from "@/components/ui/custom-date-picker";
 import { memo, useState } from "react";
+
+// Dummy data for dropdowns
+const dummyStudents = [
+  { id: 1, name: "John Doe", email: "john.doe@email.com" },
+  { id: 2, name: "Jane Smith", email: "jane.smith@email.com" },
+  { id: 3, name: "Mike Johnson", email: "mike.johnson@email.com" },
+  { id: 4, name: "Sarah Wilson", email: "sarah.wilson@email.com" },
+  { id: 5, name: "David Brown", email: "david.brown@email.com" },
+];
+
+const dummyEmployees = [
+  { id: 1, name: "Alice Cooper", role: "Senior Developer", department: "IT" },
+  { id: 2, name: "Bob Martin", role: "Marketing Manager", department: "Marketing" },
+  { id: 3, name: "Carol Davis", role: "HR Specialist", department: "HR" },
+  { id: 4, name: "Daniel Lee", role: "Finance Analyst", department: "Finance" },
+  { id: 5, name: "Emma White", role: "Project Manager", department: "Operations" },
+];
+
+const dummyJournalTypes = [
+  { id: 1, name: "Student Fee Payment", dashboards: ["Students", "Finance", "Reports"] },
+  { id: 2, name: "Employee Salary", dashboards: ["HR", "Finance", "Reports"] },
+  { id: 3, name: "Office Expenses", dashboards: ["Finance", "Reports"] },
+  { id: 4, name: "Equipment Purchase", dashboards: ["Finance", "Reports"] },
+  { id: 5, name: "Marketing Expenses", dashboards: ["Marketing", "Finance", "Reports"] },
+];
 
 const AddJournalDialog = memo(() => {
   const [formData, setFormData] = useState({
@@ -25,11 +51,12 @@ const AddJournalDialog = memo(() => {
     description: "",
     student: "",
     employee: "",
-    date: "",
+    date: null as Date | null,
+    journalType: "",
     attachment: null as File | null,
   });
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | Date | null) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
@@ -106,19 +133,46 @@ const AddJournalDialog = memo(() => {
             />
           </div>
 
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="journalType" className="text-right">
+              Journal Type *
+            </Label>
+            <Select value={formData.journalType} onValueChange={(value) => handleInputChange("journalType", value)}>
+              <SelectTrigger className="col-span-3">
+                <SelectValue placeholder="Select journal type" />
+              </SelectTrigger>
+              <SelectContent>
+                {dummyJournalTypes.map((journalType) => (
+                  <SelectItem key={journalType.id} value={journalType.name}>
+                    <div className="flex flex-col">
+                      <span>{journalType.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        Appears in: {journalType.dashboards.join(", ")}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           {formData.type === "Fee" && (
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="student" className="text-right">
                 Student *
               </Label>
-              <Input
-                id="student"
-                placeholder="Enter student name"
-                value={formData.student}
-                onChange={(e) => handleInputChange("student", e.target.value)}
-                className="col-span-3"
-                required
-              />
+              <Select value={formData.student} onValueChange={(value) => handleInputChange("student", value)}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select student" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dummyStudents.map((student) => (
+                    <SelectItem key={student.id} value={student.name}>
+                      {student.name} - {student.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
@@ -127,14 +181,18 @@ const AddJournalDialog = memo(() => {
               <Label htmlFor="employee" className="text-right">
                 Employee *
               </Label>
-              <Input
-                id="employee"
-                placeholder="Enter employee name"
-                value={formData.employee}
-                onChange={(e) => handleInputChange("employee", e.target.value)}
-                className="col-span-3"
-                required
-              />
+              <Select value={formData.employee} onValueChange={(value) => handleInputChange("employee", value)}>
+                <SelectTrigger className="col-span-3">
+                  <SelectValue placeholder="Select employee" />
+                </SelectTrigger>
+                <SelectContent>
+                  {dummyEmployees.map((employee) => (
+                    <SelectItem key={employee.id} value={employee.name}>
+                      {employee.name} - {employee.role} ({employee.department})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
@@ -142,14 +200,15 @@ const AddJournalDialog = memo(() => {
             <Label htmlFor="date" className="text-right">
               Date *
             </Label>
-            <Input
-              id="date"
-              type="date"
-              value={formData.date}
-              onChange={(e) => handleInputChange("date", e.target.value)}
-              className="col-span-3"
-              required
-            />
+            <div className="col-span-3">
+              <CustomDatePicker
+                value={formData.date}
+                onChange={(date) => handleInputChange("date", date)}
+                placeholder="Select date"
+                size="md"
+                className="w-full"
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-4 items-center gap-4">

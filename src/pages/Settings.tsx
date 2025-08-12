@@ -165,6 +165,15 @@ interface LeaveType {
   status: "active" | "inactive";
 }
 
+interface JournalType {
+  id: number;
+  name: string;
+  description: string;
+  dashboards: string[];
+  color: string;
+  status: "active" | "inactive";
+}
+
 // Memoized data generation with caching
 const getInitialCourses = (): Course[] => {
   const cacheKey = 'settingsCourses';
@@ -355,6 +364,49 @@ const initialLeaveTypes: LeaveType[] = [
   },
 ];
 
+const initialJournalTypes: JournalType[] = [
+  {
+    id: 1,
+    name: "Student Fee Payment",
+    description: "Fee payments from students for courses",
+    dashboards: ["Students", "Finance", "Reports"],
+    color: "#10B981",
+    status: "active",
+  },
+  {
+    id: 2,
+    name: "Employee Salary",
+    description: "Monthly salary payments to employees",
+    dashboards: ["HR", "Finance", "Reports"],
+    color: "#3B82F6",
+    status: "active",
+  },
+  {
+    id: 3,
+    name: "Office Expenses",
+    description: "Day-to-day office operational expenses",
+    dashboards: ["Finance", "Reports"],
+    color: "#F59E0B",
+    status: "active",
+  },
+  {
+    id: 4,
+    name: "Equipment Purchase",
+    description: "Purchase of office equipment and supplies",
+    dashboards: ["Finance", "Reports"],
+    color: "#8B5CF6",
+    status: "active",
+  },
+  {
+    id: 5,
+    name: "Marketing Expenses",
+    description: "Marketing and advertising related expenses",
+    dashboards: ["Marketing", "Finance", "Reports"],
+    color: "#EF4444",
+    status: "active",
+  },
+];
+
 // Utility functions
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -523,6 +575,7 @@ const Settings = memo(() => {
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const { batches, addBatch, updateBatch, deleteBatch } = useBatches();
   const { leaveTypes, addLeaveType, updateLeaveType, deleteLeaveType } = useLeaveTypes();
+  const [journalTypesData, setJournalTypesData] = useState<JournalType[]>(initialJournalTypes);
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -546,6 +599,8 @@ const Settings = memo(() => {
     startDate: null as Date | null,
     endDate: null as Date | null,
     syllabus: "",
+    dashboards: [] as string[],
+    color: "",
   });
 
   useEffect(() => {
@@ -626,6 +681,14 @@ const Settings = memo(() => {
     );
   }, [leaveTypes, debouncedSearchTerm]);
 
+  const filteredJournalTypes = useMemo(() => {
+    if (!debouncedSearchTerm) return journalTypesData;
+    return journalTypesData.filter(journalType => 
+      journalType.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      journalType.description.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+    );
+  }, [journalTypesData, debouncedSearchTerm]);
+
   const openDialog = useCallback((type: string, item?: any) => {
     setDialogType(type);
     setEditingItem(item);
@@ -641,6 +704,8 @@ const Settings = memo(() => {
         startDate: item.startDate ? new Date(item.startDate) : null,
         endDate: item.endDate ? new Date(item.endDate) : null,
         syllabus: item.syllabus || "",
+        dashboards: item.dashboards || [],
+        color: item.color || "",
       });
     } else {
       setFormData({
@@ -654,6 +719,8 @@ const Settings = memo(() => {
         startDate: null,
         endDate: null,
         syllabus: "",
+        dashboards: [],
+        color: "",
       });
     }
     setIsDialogOpen(true);
@@ -801,6 +868,24 @@ const Settings = memo(() => {
           });
         }
         break;
+
+      case "journalType":
+        const journalTypeItem: JournalType = {
+          id: newId,
+          name: formData.name,
+          description: formData.description,
+          dashboards: formData.dashboards,
+          color: formData.color,
+          status: editingItem ? editingItem.status : "active",
+        };
+        if (editingItem) {
+          setJournalTypesData((prev) =>
+            prev.map((item) => (item.id === editingItem.id ? journalTypeItem : item))
+          );
+        } else {
+          setJournalTypesData((prev) => [...prev, journalTypeItem]);
+        }
+        break;
     }
 
     toast({
@@ -835,6 +920,9 @@ const Settings = memo(() => {
         break;
       case "leaveType":
         deleteLeaveType(id);
+        break;
+      case "journalType":
+        setJournalTypesData((prev) => prev.filter((item) => item.id !== id));
         break;
     }
     toast({
@@ -1215,6 +1303,90 @@ const Settings = memo(() => {
             </div>
           </>
         );
+      case "journalType":
+        return (
+          <>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Journal Type Name
+              </Label>
+              <Input
+                id="name"
+                placeholder="Enter journal type name"
+                className="col-span-3"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Enter description"
+                className="col-span-3"
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="color" className="text-right">
+                Color
+              </Label>
+              <Input
+                id="color"
+                type="color"
+                placeholder="Select color"
+                className="col-span-3"
+                value={formData.color}
+                onChange={(e) =>
+                  setFormData({ ...formData, color: e.target.value })
+                }
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="dashboards" className="text-right">
+                Dashboards
+              </Label>
+              <div className="col-span-3 space-y-2">
+                <p className="text-sm text-muted-foreground">Select which dashboards this journal type will appear in:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {["Students", "Tutors", "HR", "Finance", "Reports", "Marketing"].map((dashboard) => (
+                    <div key={dashboard} className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id={`dashboard-${dashboard}`}
+                        checked={formData.dashboards.includes(dashboard)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setFormData({
+                              ...formData,
+                              dashboards: [...formData.dashboards, dashboard]
+                            });
+                          } else {
+                            setFormData({
+                              ...formData,
+                              dashboards: formData.dashboards.filter(d => d !== dashboard)
+                            });
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                      <Label htmlFor={`dashboard-${dashboard}`} className="text-sm">
+                        {dashboard}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </>
+        );
       default:
         return null;
     }
@@ -1241,7 +1413,7 @@ const Settings = memo(() => {
       </div>
 
       <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="courses">Courses</TabsTrigger>
           <TabsTrigger value="syllabus">Syllabus</TabsTrigger>
           <TabsTrigger value="batches">Batches</TabsTrigger>
@@ -1249,6 +1421,7 @@ const Settings = memo(() => {
           <TabsTrigger value="tax">Tax Settings</TabsTrigger>
           <TabsTrigger value="coupons">Coupons</TabsTrigger>
           <TabsTrigger value="leaveTypes">Leave Types</TabsTrigger>
+          <TabsTrigger value="journalTypes">Journal Types</TabsTrigger>
         </TabsList>
 
         <TabsContent value="courses" className="space-y-4">
@@ -1358,15 +1531,7 @@ const Settings = memo(() => {
                 <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
                 Tutors
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/attendance')}
-                className="text-xs sm:text-sm"
-              >
-                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                Attendance
-              </Button>
+              
               <Button onClick={() => openDialog("syllabus")}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Syllabus
@@ -1823,6 +1988,99 @@ const Settings = memo(() => {
                         size="sm"
                         className="text-destructive"
                         onClick={() => handleDelete("leaveType", leaveType.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="journalTypes" className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center space-x-2">
+              <h2 className="text-xl font-semibold">Journal Types Management</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/journals')}
+                className="text-xs sm:text-sm"
+              >
+                <Users className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Journals
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/reports')}
+                className="text-xs sm:text-sm"
+              >
+                <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                Reports
+              </Button>
+              <Button onClick={() => openDialog("journalType")}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Journal Type
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            {filteredJournalTypes.map((journalType) => (
+              <Card key={journalType.id}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div 
+                        className="p-2 rounded-lg" 
+                        style={{ backgroundColor: `${journalType.color}20` }}
+                      >
+                        <Book 
+                          className="w-5 h-5" 
+                          style={{ color: journalType.color }}
+                        />
+                      </div>
+                      <div>
+                        <CardTitle className="text-lg">
+                          {journalType.name}
+                        </CardTitle>
+                        <CardDescription>
+                          {journalType.description}
+                        </CardDescription>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {journalType.dashboards.map((dashboard) => (
+                            <Badge 
+                              key={dashboard} 
+                              variant="outline" 
+                              className="text-xs"
+                            >
+                              {dashboard}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge className={getStatusColor(journalType.status === "active" ? "Active" : "Inactive")}>
+                        {journalType.status}
+                      </Badge>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDialog("journalType", journalType)}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive"
+                        onClick={() => handleDelete("journalType", journalType.id)}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
