@@ -3,15 +3,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Edit, Trash2, Eye, Calendar as CalendarIcon2 } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Edit, Trash2, Eye } from 'lucide-react';
 import { useTasks, Task } from '@/contexts/TasksContext';
 import { format, startOfWeek, endOfWeek, eachDayOfInterval, startOfMonth, endOfMonth, startOfYear, endOfYear, isSameDay, isSameMonth, isSameYear, addDays, subDays, addMonths, subMonths, addYears, subYears, getDay, getDate, getMonth, getYear } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
+import { Calendar as DatePicker } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import EventDialog from './EventDialog';
+import { Input } from '@/components/ui/input';
 
 interface CalendarProps {
   userId: string;
@@ -28,7 +30,10 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
   const [editingEvent, setEditingEvent] = useState<any>(null);
   const calendarGridRef = useRef<HTMLDivElement | null>(null);
   const [highlightDate, setHighlightDate] = useState<string | null>(null);
-  const [customRange, setCustomRange] = useState<{ start: Date; end: Date } | null>(null);
+  const [customRange, setCustomRange] = useState<{ start: Date; end: Date }>({ 
+    start: new Date(), 
+    end: addDays(new Date(), 7) 
+  });
   const [isCustomRangeOpen, setIsCustomRangeOpen] = useState(false);
   
   const { tasks, addTask, updateTask, deleteTask, getTasksByTutor } = useTasks();
@@ -76,11 +81,9 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
         setCurrentDate(prev => subYears(prev, 1));
         break;
       case 'custom':
-        if (customRange) {
-          const newStart = subDays(customRange.start, 7);
-          const newEnd = subDays(customRange.end, 7);
-          setCustomRange({ start: newStart, end: newEnd });
-        }
+        const newStart = subDays(customRange.start, 7);
+        const newEnd = subDays(customRange.end, 7);
+        setCustomRange({ start: newStart, end: newEnd });
         break;
     }
   }, [viewMode, customRange]);
@@ -100,11 +103,9 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
         setCurrentDate(prev => addYears(prev, 1));
         break;
       case 'custom':
-        if (customRange) {
-          const newStart = addDays(customRange.start, 7);
-          const newEnd = addDays(customRange.end, 7);
-          setCustomRange({ start: newStart, end: newEnd });
-        }
+        const newStart = addDays(customRange.start, 7);
+        const newEnd = addDays(customRange.end, 7);
+        setCustomRange({ start: newStart, end: newEnd });
         break;
     }
   }, [viewMode, customRange]);
@@ -112,7 +113,7 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
   const goToToday = useCallback(() => {
     const now = new Date();
     setCurrentDate(now);
-    if (viewMode === 'custom' && customRange) {
+    if (viewMode === 'custom') {
       // For custom range, adjust the range to include today
       const daysDiff = Math.ceil((now.getTime() - customRange.start.getTime()) / (1000 * 60 * 60 * 24));
       const newStart = addDays(customRange.start, daysDiff);
@@ -181,10 +182,7 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
         return eachDayOfInterval({ start: yearStart, end: yearEnd });
       
       case 'custom':
-        if (customRange) {
-          return eachDayOfInterval({ start: customRange.start, end: customRange.end });
-        }
-        return [];
+        return eachDayOfInterval({ start: customRange.start, end: customRange.end });
       
       default:
         return [];
@@ -225,10 +223,7 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
       case 'yearly':
         return format(currentDate, 'yyyy');
       case 'custom':
-        if (customRange) {
-          return `${format(customRange.start, 'MMM dd')} - ${format(customRange.end, 'MMM dd, yyyy')}`;
-        }
-        return 'Custom Range';
+        return `${format(customRange.start, 'MMM dd')} - ${format(customRange.end, 'MMM dd, yyyy')}`;
       default:
         return '';
     }
@@ -543,30 +538,82 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="start-date">Start Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-full justify-start text-left font-normal ${customRange?.start ? 'text-primary' : 'text-muted-foreground'}`}
+                    >
+                      {customRange?.start ? format(customRange.start, 'MMM dd, yyyy') : <span>Pick a start date</span>}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <DatePicker
+                      selected={customRange?.start}
+                      onSelect={(date) => {
+                        if (date) {
+                          setCustomRange(prev => ({ 
+                            start: date, 
+                            end: prev?.end || date 
+                          }));
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <Input
-                  id="start-date"
-                  type="date"
-                  defaultValue={format(new Date(), 'yyyy-MM-dd')}
+                  type="time"
+                  placeholder="Start time"
+                  defaultValue="09:00"
                   onChange={(e) => {
-                    const startDate = e.target.value;
-                    const endDate = (document.getElementById('end-date') as HTMLInputElement)?.value;
-                    if (startDate && endDate) {
-                      handleCustomRangeSubmit(startDate, endDate);
+                    if (customRange?.start) {
+                      const [hours, minutes] = e.target.value.split(':');
+                      const newStart = new Date(customRange.start);
+                      newStart.setHours(parseInt(hours), parseInt(minutes));
+                      setCustomRange(prev => ({ ...prev, start: newStart }));
                     }
                   }}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="end-date">End Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={`w-full justify-start text-left font-normal ${customRange?.end ? 'text-primary' : 'text-muted-foreground'}`}
+                    >
+                      {customRange?.end ? format(customRange.end, 'MMM dd, yyyy') : <span>Pick an end date</span>}
+                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <DatePicker
+                      selected={customRange?.end}
+                      onSelect={(date) => {
+                        if (date) {
+                          setCustomRange(prev => ({ 
+                            start: prev?.start || date, 
+                            end: date 
+                          }));
+                        }
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
                 <Input
-                  id="end-date"
-                  type="date"
-                  defaultValue={format(addDays(new Date(), 7), 'yyyy-MM-dd')}
+                  type="time"
+                  placeholder="End time"
+                  defaultValue="17:00"
                   onChange={(e) => {
-                    const endDate = e.target.value;
-                    const startDate = (document.getElementById('start-date') as HTMLInputElement)?.value;
-                    if (startDate && endDate) {
-                      handleCustomRangeSubmit(startDate, endDate);
+                    if (customRange?.end) {
+                      const [hours, minutes] = e.target.value.split(':');
+                      const newEnd = new Date(customRange.end);
+                      newEnd.setHours(parseInt(hours), parseInt(minutes));
+                      setCustomRange(prev => ({ ...prev, end: newEnd }));
                     }
                   }}
                 />
@@ -578,10 +625,8 @@ const Calendar: React.FC<CalendarProps> = ({ userId, userRole }) => {
               Cancel
             </Button>
             <Button onClick={() => {
-              const startDate = (document.getElementById('start-date') as HTMLInputElement)?.value;
-              const endDate = (document.getElementById('end-date') as HTMLInputElement)?.value;
-              if (startDate && endDate) {
-                handleCustomRangeSubmit(startDate, endDate);
+              if (customRange?.start && customRange?.end) {
+                handleCustomRangeSubmit(format(customRange.start, 'yyyy-MM-dd'), format(customRange.end, 'yyyy-MM-dd'));
               }
             }}>
               Set Range
