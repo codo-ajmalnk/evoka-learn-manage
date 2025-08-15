@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { memo, useState, useCallback } from "react";
 
-export const AddStudentDialog = memo(() => {
+const AddStudentDialog = memo(() => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -117,7 +117,7 @@ export const AddStudentDialog = memo(() => {
                 <SelectItem value="male">Male</SelectItem>
                 <SelectItem value="female">Female</SelectItem>
                 <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
+            </SelectContent>
             </Select>
           </div>
         </div>
@@ -131,4 +131,5 @@ export const AddStudentDialog = memo(() => {
   );
 });
 
-AddStudentDialog.displayName = "AddStudentDialog"; 
+AddStudentDialog.displayName = "AddStudentDialog";
+export default AddStudentDialog; 

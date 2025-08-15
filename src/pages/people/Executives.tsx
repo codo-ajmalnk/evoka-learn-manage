@@ -30,8 +30,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 // Lazy load components for better performance
-const LazyExecutiveDetailsDialog = lazy(() => import('./ExecutiveDetailsDialog.tsx'));
-const LazyAddExecutiveDialog = lazy(() => import('./AddExecutiveDialog.tsx'));
+const LazyExecutiveDetailsDialog = lazy(() => import('../dialogs/ExecutiveDetailsDialog.tsx'));
+const LazyAddExecutiveDialog = lazy(() => import('../dialogs/AddExecutiveDialog.tsx'));
 
 // Simple debounce hook implementation
 const useDebounce = (value: any, delay: number) => {

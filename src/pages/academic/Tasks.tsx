@@ -49,8 +49,8 @@ import { Calendar as CalendarComponent } from '@/components/Calendar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 // Lazy load components
-const LazyAddTaskDialog = lazy(() => import('./AddTaskDialog'));
-const LazyEditTaskDialog = lazy(() => import('./EditTaskDialog'));
+const LazyAddTaskDialog = lazy(() => import('../dialogs/AddTaskDialog'));
+const LazyEditTaskDialog = lazy(() => import('../dialogs/EditTaskDialog'));
 
 // Mock users data for assignment
 const mockUsers = [

@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const Index = () => {
+const Home = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -24,4 +24,4 @@ const Index = () => {
   );
 };
 
-export default Index;
+export default Home;

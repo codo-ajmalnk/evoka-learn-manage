@@ -12,9 +12,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { toast, useToast } from "@/hooks/use-toast";
 import {
   Calendar,
+  Crown,
   DollarSign,
   Edit,
   Eye,
@@ -22,7 +23,6 @@ import {
   Plus,
   Search,
   Trash2,
-  UserCheck,
   Users,
 } from "lucide-react";
 import { useState, useEffect, useMemo, useCallback, memo, Suspense, lazy, useRef } from "react";
@@ -30,8 +30,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { TableSkeleton } from "@/components/ui/skeletons/table-skeleton";
 
 // Lazy load components for better performance
-const LazyHRDetailsDialog = lazy(() => import('./HRDetailsDialog'));
-const LazyAddHRDialog = lazy(() => import('./AddHRDialog'));
+const LazyManagerDetailsDialog = lazy(() => import('../dialogs/ManagerDetailsDialog'));
+const LazyAddManagerDialog = lazy(() => import('../dialogs/AddManagerDialog'));
 
 // Simple debounce hook implementation
 const useDebounce = (value: any, delay: number) => {
@@ -111,12 +111,12 @@ const useVirtualScrolling = (items: any[], itemHeight: number, containerHeight: 
 const performanceLogger = {
   logRender: (time: number) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log(`HR render time: ${time.toFixed(2)}ms`);
+      console.log(`Managers render time: ${time.toFixed(2)}ms`);
     }
   }
 };
 
-interface HRPerson {
+interface Manager {
   id: string;
   firstName: string;
   lastName: string;
@@ -132,12 +132,13 @@ interface HRPerson {
   photo?: string;
   qualification: string;
   experience: string;
-  specialization: string;
+  department: string;
   designation: string;
   salary: number;
   paidAmount: number;
   status: "active" | "inactive";
   joiningDate: string;
+  teamSize: number;
   accountDetails: {
     bankName: string;
     accountNumber: string;
@@ -167,24 +168,24 @@ interface HRPerson {
   }[];
 }
 
-// Memoized HR data with caching
-const getDummyHRPersons = (() => {
-  let cachedHRPersons: HRPerson[] | null = null;
+// Memoized manager data with caching
+const getDummyManagers = (() => {
+  let cachedManagers: Manager[] | null = null;
   let cacheTime = 0;
   const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
   return () => {
     const now = Date.now();
-    if (cachedHRPersons && (now - cacheTime) < CACHE_DURATION) {
-      return cachedHRPersons;
+    if (cachedManagers && (now - cacheTime) < CACHE_DURATION) {
+      return cachedManagers;
     }
 
     // Generate large dataset for testing
-    const hrPersons = Array.from({ length: 1000 }, (_, index) => ({
-      id: `HR${String(index + 1).padStart(3, '0')}`,
-      firstName: `HR${index + 1}`,
+    const managers = Array.from({ length: 1000 }, (_, index) => ({
+      id: `MGR${String(index + 1).padStart(3, '0')}`,
+      firstName: `Manager${index + 1}`,
       lastName: `Last${index + 1}`,
-      email: `hr${index + 1}@evoka.in`,
+      email: `manager${index + 1}@evoka.in`,
       phone: `+91 ${Math.floor(Math.random() * 9000000000) + 1000000000}`,
       whatsapp: `+91 ${Math.floor(Math.random() * 9000000000) + 1000000000}`,
       dob: `198${Math.floor(Math.random() * 10)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
@@ -193,14 +194,15 @@ const getDummyHRPersons = (() => {
       religion: Math.random() > 0.3 ? "Hindu" : undefined,
       address: `${Math.floor(Math.random() * 999) + 1} Street, City ${index + 1}`,
       pin: `${Math.floor(Math.random() * 900000) + 100000}`,
-      qualification: ["MBA HR", "M.A. Psychology", "BBA HR", "MHRM"][Math.floor(Math.random() * 4)],
+      qualification: ["MBA Operations", "MBA HR", "MBA Finance", "MBA Marketing"][Math.floor(Math.random() * 4)],
       experience: `${Math.floor(Math.random() * 20) + 1} years`,
-      specialization: ["Talent Acquisition", "Employee Relations", "Compensation & Benefits", "Training & Development", "HR Analytics"][Math.floor(Math.random() * 5)],
-      designation: ["Senior HR Executive", "HR Executive", "HR Manager", "HR Specialist", "HR Coordinator"][Math.floor(Math.random() * 5)],
-      salary: Math.floor(Math.random() * 30000) + 50000,
-      paidAmount: Math.floor(Math.random() * 70000),
+      department: ["Operations", "Human Resources", "Finance", "Marketing", "IT"][Math.floor(Math.random() * 5)],
+      designation: ["Operations Manager", "HR Manager", "Finance Manager", "Marketing Manager", "IT Manager"][Math.floor(Math.random() * 5)],
+      salary: Math.floor(Math.random() * 50000) + 70000,
+      paidAmount: Math.floor(Math.random() * 80000),
       status: Math.random() > 0.1 ? "active" : "inactive" as "active" | "inactive",
       joiningDate: `202${Math.floor(Math.random() * 5)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+      teamSize: Math.floor(Math.random() * 15) + 5,
     accountDetails: {
         bankName: ["HDFC Bank", "SBI", "ICICI Bank", "Axis Bank"][Math.floor(Math.random() * 4)],
         accountNumber: `${Math.floor(Math.random() * 900000000000000) + 100000000000000}`,
@@ -211,44 +213,42 @@ const getDummyHRPersons = (() => {
       payments: [],
     }));
 
-    cachedHRPersons = hrPersons;
+    cachedManagers = managers;
     cacheTime = now;
-    return hrPersons;
+    return managers;
   };
 })();
 
-// Memoized HR row component
-const HRRow = memo(({ 
-  hr, 
+// Memoized manager row component
+const ManagerRow = memo(({ 
+  manager, 
   onEdit, 
   onDelete, 
   onView,
-  selectedHR,
-  setSelectedHR,
-  userRole
+  selectedManager,
+  setSelectedManager
 }: { 
-  hr: HRPerson; 
-  onEdit: (hr: HRPerson) => void; 
+  manager: Manager; 
+  onEdit: (manager: Manager) => void; 
   onDelete: (id: string) => void;
-  onView: (hr: HRPerson) => void;
-  selectedHR: HRPerson | null;
-  setSelectedHR: (hr: HRPerson | null) => void;
-  userRole: string;
+  onView: (manager: Manager) => void;
+  selectedManager: Manager | null;
+  setSelectedManager: (manager: Manager | null) => void;
 }) => {
   const handleView = useCallback(() => {
-    setSelectedHR(hr);
-    onView(hr);
-  }, [hr, setSelectedHR, onView]);
+    setSelectedManager(manager);
+    onView(manager);
+  }, [manager, setSelectedManager, onView]);
 
   const handleEdit = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onEdit(hr);
-  }, [hr, onEdit]);
+    onEdit(manager);
+  }, [manager, onEdit]);
 
   const handleDelete = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
-    onDelete(hr.id);
-  }, [hr.id, onDelete]);
+    onDelete(manager.id);
+  }, [manager.id, onDelete]);
 
   return (
     <tr 
@@ -258,43 +258,46 @@ const HRRow = memo(({
       <td className="p-2">
         <div className="flex items-center gap-3">
           <Avatar>
-            <AvatarImage src={hr.photo} />
+            <AvatarImage src={manager.photo} />
             <AvatarFallback>
-              {hr.firstName[0]}
-              {hr.lastName[0]}
+              {manager.firstName[0]}
+              {manager.lastName[0]}
             </AvatarFallback>
           </Avatar>
           <div>
             <p className="font-medium">
-              {hr.firstName} {hr.lastName}
+              {manager.firstName} {manager.lastName}
             </p>
             <p className="text-sm text-muted-foreground">
-              {hr.designation}
+              {manager.designation}
             </p>
           </div>
         </div>
       </td>
       <td className="p-2">
-        <Badge variant="outline">{hr.id}</Badge>
+        <Badge variant="outline">{manager.id}</Badge>
       </td>
       <td className="p-2">
         <div>
-          <p className="text-sm">{hr.phone}</p>
+          <p className="text-sm">{manager.phone}</p>
           <p className="text-sm text-muted-foreground">
-            {hr.email}
+            {manager.email}
           </p>
         </div>
       </td>
       <td className="p-2">
-        <Badge variant="secondary">{hr.specialization}</Badge>
+        <Badge variant="secondary">{manager.department}</Badge>
       </td>
       <td className="p-2">
-        <span className="text-sm">{hr.experience}</span>
+        <div className="flex items-center gap-1">
+          <Users className="h-3 w-3" />
+          <span className="text-sm">{manager.teamSize}</span>
+        </div>
       </td>
       <td className="p-2">
         <div>
           <p className="font-medium">
-            ₹{hr.salary.toLocaleString()}
+            ₹{manager.salary.toLocaleString()}
           </p>
           <p className="text-xs text-muted-foreground">Monthly</p>
         </div>
@@ -302,10 +305,10 @@ const HRRow = memo(({
       <td className="p-2">
         <Badge
           variant={
-            hr.status === "active" ? "success" : "secondary"
+            manager.status === "active" ? "success" : "secondary"
           }
         >
-          {hr.status}
+          {manager.status}
         </Badge>
       </td>
       <td className="p-2">
@@ -317,22 +320,20 @@ const HRRow = memo(({
           >
             <Edit className="h-4 w-4" />
           </Button>
-          {userRole === "admin" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDelete}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
         </div>
       </td>
     </tr>
   );
 });
 
-HRRow.displayName = "HRRow";
+ManagerRow.displayName = "ManagerRow";
 
 // Memoized search component
 const SearchComponent = memo(({ 
@@ -350,7 +351,7 @@ const SearchComponent = memo(({
     <div className="relative">
       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
       <Input
-        placeholder="Search HR personnel..."
+        placeholder="Search managers..."
         value={searchTerm}
         onChange={handleSearchChange}
         className="pl-10 w-full sm:w-64"
@@ -365,14 +366,14 @@ SearchComponent.displayName = "SearchComponent";
 const FilterTabs = memo(({ 
   activeTab, 
   onTabChange, 
-  hrPersons 
+  managers 
 }: { 
   activeTab: string; 
   onTabChange: (value: string) => void; 
-  hrPersons: HRPerson[];
+  managers: Manager[];
 }) => {
-  const activeCount = useMemo(() => hrPersons.filter((hr) => hr.status === "active").length, [hrPersons]);
-  const inactiveCount = useMemo(() => hrPersons.filter((hr) => hr.status === "inactive").length, [hrPersons]);
+  const activeCount = useMemo(() => managers.filter((m) => m.status === "active").length, [managers]);
+  const inactiveCount = useMemo(() => managers.filter((m) => m.status === "inactive").length, [managers]);
 
   return (
     <div className="mt-4">
@@ -382,7 +383,7 @@ const FilterTabs = memo(({
             value="all" 
             className="text-xs sm:text-sm md:text-base px-2 sm:px-3 md:px-4 py-2 h-auto whitespace-nowrap flex-shrink-0"
           >
-            All HR ({hrPersons.length})
+            All Managers ({managers.length})
           </TabsTrigger>
           <TabsTrigger 
             value="active" 
@@ -406,21 +407,19 @@ FilterTabs.displayName = "FilterTabs";
 
 // Virtual table component for large datasets
 const VirtualTable = memo(({ 
-  hrPersons, 
+  managers, 
   onEdit, 
   onDelete, 
   onView,
-  selectedHR,
-  setSelectedHR,
-  userRole
+  selectedManager,
+  setSelectedManager
 }: { 
-  hrPersons: HRPerson[];
-  onEdit: (hr: HRPerson) => void;
+  managers: Manager[];
+  onEdit: (manager: Manager) => void;
   onDelete: (id: string) => void;
-  onView: (hr: HRPerson) => void;
-  selectedHR: HRPerson | null;
-  setSelectedHR: (hr: HRPerson | null) => void;
-  userRole: string;
+  onView: (manager: Manager) => void;
+  selectedManager: Manager | null;
+  setSelectedManager: (manager: Manager | null) => void;
 }) => {
   const ITEM_HEIGHT = 80; // Approximate height of each row
   const CONTAINER_HEIGHT = 600; // Height of the table container
@@ -431,7 +430,7 @@ const VirtualTable = memo(({
     totalHeight, 
     offsetY, 
     handleScroll 
-  } = useVirtualScrolling(hrPersons, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
+  } = useVirtualScrolling(managers, ITEM_HEIGHT, CONTAINER_HEIGHT, 10);
 
   return (
     <>
@@ -446,27 +445,26 @@ const VirtualTable = memo(({
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left p-2">HR Personnel</th>
+                  <th className="text-left p-2">Manager</th>
                   <th className="text-left p-2">ID</th>
                   <th className="text-left p-2">Contact</th>
-                  <th className="text-left p-2">Specialization</th>
-                  <th className="text-left p-2">Experience</th>
+                  <th className="text-left p-2">Department</th>
+                  <th className="text-left p-2">Team Size</th>
                   <th className="text-left p-2">Salary</th>
                   <th className="text-left p-2">Status</th>
                   <th className="text-left p-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {visibleItems.map((hr) => (
-                  <HRRow
-                    key={hr.id}
-                    hr={hr}
+                {visibleItems.map((manager) => (
+                  <ManagerRow
+                    key={manager.id}
+                    manager={manager}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onView={onView}
-                    selectedHR={selectedHR}
-                    setSelectedHR={setSelectedHR}
-                    userRole={userRole}
+                    selectedManager={selectedManager}
+                    setSelectedManager={setSelectedManager}
                   />
                 ))}
               </tbody>
@@ -475,11 +473,11 @@ const VirtualTable = memo(({
         </div>
       </div>
       
-      {/* HR Details Dialog */}
-      {selectedHR && (
-        <Dialog open={!!selectedHR} onOpenChange={() => setSelectedHR(null)}>
+      {/* Manager Details Dialog */}
+      {selectedManager && (
+        <Dialog open={!!selectedManager} onOpenChange={() => setSelectedManager(null)}>
           <Suspense fallback={<div>Loading...</div>}>
-            <LazyHRDetailsDialog hr={selectedHR} />
+            <LazyManagerDetailsDialog manager={selectedManager} />
           </Suspense>
         </Dialog>
       )}
@@ -489,12 +487,12 @@ const VirtualTable = memo(({
 
 VirtualTable.displayName = "VirtualTable";
 
-const HR = () => {
+const Managers = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [hrPersons, setHRPersons] = useState<HRPerson[]>([]);
+  const [managers, setManagers] = useState<Manager[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
-  const [selectedHR, setSelectedHR] = useState<HRPerson | null>(null);
+  const [selectedManager, setSelectedManager] = useState<Manager | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -512,19 +510,21 @@ const HR = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = user.role || "admin";
 
-  // Memoized filtered HR persons
-  const filteredHRPersons = useMemo(() => {
+  // Memoized filtered managers
+  const filteredManagers = useMemo(() => {
     const startTime = performance.now();
     
-    const filtered = hrPersons.filter((hr) => {
-    const matchesSearch = `${hr.firstName} ${hr.lastName} ${hr.email} ${hr.id}`
-      .toLowerCase()
-        .includes(debouncedSearchTerm.toLowerCase());
+    const filtered = managers.filter((manager) => {
+    const matchesSearch =
+      `${manager.firstName} ${manager.lastName} ${manager.email} ${manager.id}`
+        .toLowerCase()
+          .includes(debouncedSearchTerm.toLowerCase());
 
     if (activeTab === "all") return matchesSearch;
-    if (activeTab === "active") return matchesSearch && hr.status === "active";
+    if (activeTab === "active")
+      return matchesSearch && manager.status === "active";
     if (activeTab === "inactive")
-      return matchesSearch && hr.status === "inactive";
+      return matchesSearch && manager.status === "inactive";
 
     return matchesSearch;
   });
@@ -533,25 +533,25 @@ const HR = () => {
     performanceLogger.logRender(endTime - startTime);
 
     return filtered;
-  }, [hrPersons, debouncedSearchTerm, activeTab]);
+  }, [managers, debouncedSearchTerm, activeTab]);
 
   // Throttled handlers
-  const handleEdit = useThrottle((hr: HRPerson) => {
+  const handleEdit = useThrottle((manager: Manager) => {
     toast({
-      title: "Edit HR Personnel",
-      description: `Editing ${hr.firstName} ${hr.lastName}`,
+      title: "Edit Manager",
+      description: `Editing ${manager.firstName} ${manager.lastName}`,
     });
   }, 300);
 
   const handleDelete = useThrottle((id: string) => {
-    setHRPersons(hrPersons.filter((hr) => hr.id !== id));
+    setManagers(managers.filter((manager) => manager.id !== id));
     toast({
-      title: "HR Personnel Deleted",
-      description: "HR personnel has been successfully deleted.",
+      title: "Manager Deleted",
+      description: "Manager has been successfully deleted.",
     });
   }, 300);
 
-  const handleView = useThrottle((hr: HRPerson) => {
+  const handleView = useThrottle((manager: Manager) => {
     // View logic here
   }, 300);
 
@@ -560,12 +560,12 @@ const HR = () => {
     const loadData = async () => {
       try {
         // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 900));
-        const data = getDummyHRPersons();
-        setHRPersons(data);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        const data = getDummyManagers();
+        setManagers(data);
         setIsLoading(false);
       } catch (error) {
-        console.error('Error loading HR personnel:', error);
+        console.error('Error loading managers:', error);
         setIsLoading(false);
       }
     };
@@ -593,11 +593,11 @@ const HR = () => {
   }, [setSearchParams]);
 
   if (isLoading) {
-    return <TableSkeleton title="HR Management" subtitle="Manage HR personnel and information" />;
+    return <TableSkeleton title="Managers Management" subtitle="Manage manager profiles and information" />;
   }
 
-  // Only admin and manager can access HR page
-  if (userRole !== "admin" && userRole !== "manager") {
+  // Only admin can access managers page
+  if (userRole !== "admin") {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -615,9 +615,9 @@ const HR = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-bold">HR Management</h1>
+          <h1 className="text-3xl font-bold">Managers Management</h1>
           <p className="text-muted-foreground">
-              Manage HR personnel and information ({hrPersons.length} total)
+              Manage manager profiles and information ({managers.length} total)
           </p>
         </div>
         <div className="flex gap-2">
@@ -645,27 +645,17 @@ const HR = () => {
             <Users className="h-4 w-4" />
             Executives
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => navigate('/managers')}
-            className="gap-2"
-          >
-            <Users className="h-4 w-4" />
-            Managers
-          </Button>
-        {userRole === "admin" && (
-            <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-              <DialogTrigger asChild>
-                <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add New HR
-          </Button>
-              </DialogTrigger>
-              <Suspense fallback={<div>Loading...</div>}>
-                <LazyAddHRDialog />
-              </Suspense>
-            </Dialog>
-        )}
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gap-2">
+          <Plus className="h-4 w-4" />
+          Add New Manager
+        </Button>
+            </DialogTrigger>
+            <Suspense fallback={<div>Loading...</div>}>
+              <LazyAddManagerDialog />
+            </Suspense>
+          </Dialog>
         </div>
       </div>
 
@@ -677,8 +667,8 @@ const HR = () => {
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total HR</p>
-                <p className="text-xl font-semibold">{hrPersons.length}</p>
+                <p className="text-sm text-muted-foreground">Total Managers</p>
+                <p className="text-xl font-semibold">{managers.length}</p>
               </div>
             </div>
           </CardContent>
@@ -688,12 +678,12 @@ const HR = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-success/10 rounded-lg">
-                <UserCheck className="h-5 w-5 text-success" />
+                <Crown className="h-5 w-5 text-success" />
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Active</p>
                 <p className="text-xl font-semibold">
-                  {hrPersons.filter((hr) => hr.status === "active").length}
+                  {managers.filter((m) => m.status === "active").length}
                 </p>
               </div>
             </div>
@@ -707,8 +697,10 @@ const HR = () => {
                 <Calendar className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Experience</p>
-                <p className="text-xl font-semibold">10+ Yrs</p>
+                <p className="text-sm text-muted-foreground">Team Size</p>
+                <p className="text-xl font-semibold">
+                  {managers.reduce((sum, m) => sum + m.teamSize, 0)}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -722,7 +714,7 @@ const HR = () => {
               </div>
               <div>
                 <p className="text-sm text-muted-foreground">Avg Salary</p>
-                <p className="text-xl font-semibold">₹65K</p>
+                <p className="text-xl font-semibold">₹82.5K</p>
               </div>
             </div>
           </CardContent>
@@ -732,7 +724,7 @@ const HR = () => {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <CardTitle>HR Personnel List</CardTitle>
+            <CardTitle>Managers List</CardTitle>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 <SearchComponent 
                   searchTerm={searchTerm} 
@@ -750,23 +742,22 @@ const HR = () => {
             <FilterTabs 
               activeTab={activeTab}
               onTabChange={handleTabChange}
-              hrPersons={hrPersons}
+              managers={managers}
             />
 
-            {filteredHRPersons.length > 0 ? (
+            {filteredManagers.length > 0 ? (
               <VirtualTable
-                hrPersons={filteredHRPersons}
+                managers={filteredManagers}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onView={handleView}
-                selectedHR={selectedHR}
-                setSelectedHR={setSelectedHR}
-                userRole={userRole}
+                selectedManager={selectedManager}
+                setSelectedManager={setSelectedManager}
               />
             ) : (
             <div className="text-center py-8">
               <p className="text-muted-foreground">
-                No HR personnel found matching your search.
+                No managers found matching your search.
               </p>
             </div>
           )}
@@ -777,4 +768,4 @@ const HR = () => {
   );
 };
 
-export default memo(HR);
+export default memo(Managers);

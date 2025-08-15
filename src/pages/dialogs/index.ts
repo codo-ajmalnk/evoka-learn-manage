@@ -1,0 +1,19 @@
+// Export all dialog components
+export { default as AddAssignmentDialog } from './AddAssignmentDialog';
+export { default as AddAttendanceDialog } from './AddAttendanceDialog';
+export { default as AddExecutiveDialog } from './AddExecutiveDialog';
+export { default as AddHRDialog } from './AddHRDialog';
+export { default as AddJournalDialog } from './AddJournalDialog';
+export { default as AddManagerDialog } from './AddManagerDialog';
+export { default as AddStudentDialog } from './AddStudentDialog';
+export { default as AddTaskDialog } from './AddTaskDialog';
+export { default as AddTutorDialog } from './AddTutorDialog';
+export { default as AssignmentDetailsDialog } from './AssignmentDetailsDialog';
+export { default as EditTaskDialog } from './EditTaskDialog';
+export { default as ExecutiveDetailsDialog } from './ExecutiveDetailsDialog';
+export { default as HRDetailsDialog } from './HRDetailsDialog';
+export { default as JournalDetailsDialog } from './JournalDetailsDialog';
+export { default as LeaveRequestDialog } from './LeaveRequestDialog';
+export { default as ManagerDetailsDialog } from './ManagerDetailsDialog';
+export { default as StudentDetailsDialog } from './StudentDetailsDialog';
+export { default as TutorDetailsDialog } from './TutorDetailsDialog';

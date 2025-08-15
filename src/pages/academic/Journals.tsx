@@ -46,8 +46,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { CardGridSkeleton } from "@/components/ui/skeletons/card-grid-skeleton";
 
 // Lazy load components for better performance
-const LazyJournalDetailsDialog = lazy(() => import('./JournalDetailsDialog.tsx'));
-const LazyAddJournalDialog = lazy(() => import('./AddJournalDialog.tsx'));
+const LazyJournalDetailsDialog = lazy(() => import('../dialogs/JournalDetailsDialog.tsx'));
+const LazyAddJournalDialog = lazy(() => import('../dialogs/AddJournalDialog.tsx'));
 
 // Simple debounce hook implementation
 const useDebounce = (value: any, delay: number) => {

@@ -29,7 +29,7 @@ interface StudentDetailsDialogProps {
   student: any;
 }
 
-export const StudentDetailsDialog = memo(({ student }: StudentDetailsDialogProps) => {
+const StudentDetailsDialog = memo(({ student }: StudentDetailsDialogProps) => {
   return (
     <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
       <DialogHeader>
@@ -299,4 +299,5 @@ export const StudentDetailsDialog = memo(({ student }: StudentDetailsDialogProps
   );
 });
 
-StudentDetailsDialog.displayName = "StudentDetailsDialog"; 
+StudentDetailsDialog.displayName = "StudentDetailsDialog";
+export default StudentDetailsDialog;

@@ -6,24 +6,28 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { BatchProvider } from "@/contexts/BatchContext";
 import { LeaveTypesProvider } from "@/contexts/LeaveTypesContext";
 import { TasksProvider } from "@/contexts/TasksContext";
-import Index from "./pages/Index";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import Students from "./pages/Students";
-import Tutors from "./pages/Tutors";
-import Executives from "./pages/Executives";
-import Managers from "./pages/Managers";
-import HR from "./pages/HR";
-import Assignments from "./pages/Assignments";
-import Journals from "./pages/Journals";
-import Attendance from "./pages/Attendance";
-import Tasks from "./pages/Tasks";
-import Reports from "./pages/Reports";
-import Settings from "./pages/Settings";
-import Profile from "./pages/Profile";
-import Notifications from "./pages/Notifications";
+import Home from "./pages/auth/Home";
+import Login from "./pages/auth/Login";
+import AdminDashboard from "./pages/dashboards/AdminDashboard";
+import ManagerDashboard from "./pages/dashboards/ManagerDashboard";
+import HRDashboard from "./pages/dashboards/HRDashboard";
+import ExecutiveDashboard from "./pages/dashboards/ExecutiveDashboard";
+import TutorDashboard from "./pages/dashboards/TutorDashboard";
+import Students from "./pages/people/Students";
+import Tutors from "./pages/people/Tutors";
+import Executives from "./pages/people/Executives";
+import Managers from "./pages/people/Managers";
+import HR from "./pages/people/HR";
+import Assignments from "./pages/academic/Assignments";
+import Journals from "./pages/academic/Journals";
+import Attendance from "./pages/academic/Attendance";
+import Tasks from "./pages/academic/Tasks";
+import Reports from "./pages/system/Reports";
+import Settings from "./pages/system/Settings";
+import Profile from "./pages/system/Profile";
+import Notifications from "./pages/system/Notifications";
 import DashboardLayout from "./components/Layout/DashboardLayout";
-import NotFound from "./pages/NotFound";
+import NotFound from "./pages/auth/NotFound";
 
 const queryClient = new QueryClient();
 
@@ -37,9 +41,14 @@ const App = () => (
             <Sonner />
             <BrowserRouter>
             <Routes>
-              <Route path="/" element={<Index />} />
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/dashboard" element={<DashboardLayout><Dashboard /></DashboardLayout>} />
+              <Route path="/dashboard" element={<DashboardLayout><AdminDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/admin" element={<DashboardLayout><AdminDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/manager" element={<DashboardLayout><ManagerDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/hr" element={<DashboardLayout><HRDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/executive" element={<DashboardLayout><ExecutiveDashboard /></DashboardLayout>} />
+              <Route path="/dashboard/tutor" element={<DashboardLayout><TutorDashboard /></DashboardLayout>} />
               <Route path="/students" element={<DashboardLayout><Students /></DashboardLayout>} />
               <Route path="/tutors" element={<DashboardLayout><Tutors /></DashboardLayout>} />
               <Route path="/executives" element={<DashboardLayout><Executives /></DashboardLayout>} />

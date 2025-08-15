@@ -145,8 +145,8 @@ const useVirtualScrolling = (items: any[], itemHeight: number, containerHeight: 
 };
 
 // Lazy load components for better performance
-const LazyStudentDetailsDialog = lazy(() => import('./StudentDetailsDialog').then(module => ({ default: module.StudentDetailsDialog })));
-const LazyAddStudentDialog = lazy(() => import('./AddStudentDialog').then(module => ({ default: module.AddStudentDialog })));
+const LazyStudentDetailsDialog = lazy(() => import('../dialogs/StudentDetailsDialog'));
+const LazyAddStudentDialog = lazy(() => import('../dialogs/AddStudentDialog'));
 
 // Simple performance logger
 const performanceLogger = {

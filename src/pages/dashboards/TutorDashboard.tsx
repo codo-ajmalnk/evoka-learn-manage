@@ -77,7 +77,7 @@ const getDashboardData = (role: string) => {
   return roleSpecificData[role] || roleSpecificData.student;
 };
 
-const Dashboard = () => {
+const TutorDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const role = user.role || "student";
@@ -499,4 +499,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default TutorDashboard;
