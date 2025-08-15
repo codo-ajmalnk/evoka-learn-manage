@@ -23,6 +23,7 @@ import {
   UserCheck,
   Users,
   X,
+  CheckSquare,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -120,6 +121,12 @@ const getMenuItems = (() => {
         description: "Track attendance",
       },
       {
+        title: "Tasks",
+        url: "/tasks",
+        icon: CheckSquare,
+        description: "Manage tutor tasks",
+      },
+      {
         title: "Reports",
         url: "/reports",
         icon: FileText,
@@ -180,6 +187,18 @@ const getMenuItems = (() => {
           description: "Track attendance",
         },
         {
+          title: "Tasks",
+          url: "/tasks",
+          icon: CheckSquare,
+          description: "Manage tasks and calendar",
+        },
+        {
+          title: "Calendar",
+          url: "/calendar",
+          icon: Calendar,
+          description: "View calendar and schedule",
+        },
+        {
           title: "Reports",
           url: "/reports",
           icon: FileText,
@@ -212,6 +231,12 @@ const getMenuItems = (() => {
           description: "Manage tutor information",
         },
         {
+          title: "Executives",
+          url: "/executives",
+          icon: Briefcase,
+          description: "Executive management",
+        },
+        {
           title: "Journals",
           url: "/journals",
           icon: DollarSign,
@@ -222,6 +247,12 @@ const getMenuItems = (() => {
           url: "/attendance",
           icon: Calendar,
           description: "Track attendance",
+        },
+        {
+          title: "Tasks",
+          url: "/tasks",
+          icon: CheckSquare,
+          description: "Manage tasks",
         },
         {
           title: "Reports",
@@ -262,6 +293,18 @@ const getMenuItems = (() => {
           description: "Track attendance",
         },
         {
+          title: "Tasks",
+          url: "/tasks",
+          icon: CheckSquare,
+          description: "Manage tasks",
+        },
+        {
+          title: "Calendar",
+          url: "/calendar",
+          icon: Calendar,
+          description: "View calendar and schedule",
+        },
+        {
           title: "Reports",
           url: "/reports",
           icon: FileText,
@@ -292,6 +335,18 @@ const getMenuItems = (() => {
           url: "/attendance",
           icon: Calendar,
           description: "Track attendance",
+        },
+        {
+          title: "Tasks",
+          url: "/tasks",
+          icon: CheckSquare,
+          description: "View my tasks",
+        },
+        {
+          title: "Calendar",
+          url: "/calendar",
+          icon: Calendar,
+          description: "View calendar and schedule",
         },
       ],
       student: [

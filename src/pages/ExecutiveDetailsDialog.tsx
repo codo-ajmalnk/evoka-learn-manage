@@ -9,6 +9,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { memo } from "react";
+import TasksDashboard from "@/components/TasksDashboard";
 
 interface Executive {
   id: string;
@@ -89,11 +90,12 @@ const ExecutiveDetailsDialog = memo(({ executive }: ExecutiveDetailsDialogProps)
       </DialogHeader>
 
       <Tabs defaultValue="personal" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="personal">Personal</TabsTrigger>
           <TabsTrigger value="professional">Professional</TabsTrigger>
           <TabsTrigger value="payment">Payments</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="tasks">Tasks</TabsTrigger>
         </TabsList>
 
         <TabsContent value="personal" className="space-y-4">
@@ -277,6 +279,14 @@ const ExecutiveDetailsDialog = memo(({ executive }: ExecutiveDetailsDialogProps)
               </Card>
             ))}
           </div>
+        </TabsContent>
+
+        <TabsContent value="tasks" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-semibold">Task Management</h3>
+          </div>
+          
+          <TasksDashboard userId={executive.id} />
         </TabsContent>
       </Tabs>
     </DialogContent>

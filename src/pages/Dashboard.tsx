@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DashboardSkeleton } from "@/components/ui/skeletons/dashboard-skeleton";
+import { DashboardCalendar } from "@/components/DashboardCalendar";
 import { 
   Users, 
   GraduationCap, 
@@ -11,7 +12,9 @@ import {
   BookOpen,
   UserCheck,
   AlertCircle,
-  Plus
+  Plus,
+  CheckSquare,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -184,6 +187,40 @@ const Dashboard = () => {
               <BookOpen className="h-4 w-4 mr-2" />
               Manage Assignments
             </Button>
+            <Button className="w-full" variant="outline" onClick={() => window.location.href = '/tasks'}>
+              <CheckSquare className="h-4 w-4 mr-2" />
+              Manage Tasks
+            </Button>
+            <Button className="w-full" variant="outline" onClick={() => window.location.href = '/tasks?view=calendar'}>
+              <CalendarIcon className="h-4 w-4 mr-2" />
+              Calendar View
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Calendar Widget */}
+      <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-6">
+        <DashboardCalendar userId={user.id || 'ADMIN001'} userRole={role} />
+        <Card>
+          <CardHeader>
+            <CardTitle>System Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Active Users</span>
+                <span className="font-medium">{data.totalStudents + data.totalTutors}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">System Status</span>
+                <Badge variant="outline" className="text-green-600">Online</Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Last Backup</span>
+                <span className="text-sm">2 hours ago</span>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -197,52 +234,232 @@ const Dashboard = () => {
       
       case "manager":
         return (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="My Students" value={data.myStudents} icon={GraduationCap} />
-            <StatCard title="My Executives" value={data.myExecutives} icon={UserCheck} />
-            <StatCard title="Pending Approvals" value={data.pendingApprovals} icon={AlertCircle} />
-            <StatCard title="Today's Attendance" value={`${data.todayAttendance}%`} icon={Calendar} />
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="My Students" value={data.myStudents} icon={GraduationCap} />
+              <StatCard title="My Executives" value={data.myExecutives} icon={UserCheck} />
+              <StatCard title="Pending Approvals" value={data.pendingApprovals} icon={AlertCircle} />
+              <StatCard title="Today's Attendance" value={`${data.todayAttendance}%`} icon={Calendar} />
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full" variant="outline" onClick={() => window.location.href = '/tasks'}>
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  Manage Tasks
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Calendar Widget */}
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-6">
+              <DashboardCalendar userId={user.id || 'MGR001'} userRole={role} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Team Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Team Members</span>
+                      <span className="font-medium">{data.myStudents + data.myExecutives}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Pending Approvals</span>
+                      <span className="font-medium text-orange-600">{data.pendingApprovals}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         );
       
-      case "hr":
+              case "hr":
         return (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="Total Employees" value={data.totalEmployees} icon={Users} />
-            <StatCard title="Pending Leaves" value={data.pendingLeaves} icon={Calendar} />
-            <StatCard title="Salary Approvals" value={data.salaryApprovals} icon={DollarSign} />
-            <StatCard title="New Applications" value={data.newApplications} icon={AlertCircle} />
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="Total Employees" value={data.totalEmployees} icon={Users} />
+              <StatCard title="Pending Leaves" value={data.pendingLeaves} icon={Calendar} />
+              <StatCard title="Salary Approvals" value={data.salaryApprovals} icon={DollarSign} />
+              <StatCard title="New Applications" value={data.newApplications} icon={AlertCircle} />
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full" variant="outline" onClick={() => window.location.href = '/tasks'}>
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  View Tasks
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Calendar Widget */}
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-6">
+              <DashboardCalendar userId={user.id || 'HR001'} userRole={role} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>HR Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Total Employees</span>
+                      <span className="font-medium">{data.totalEmployees}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Pending Leaves</span>
+                      <span className="font-medium text-orange-600">{data.pendingLeaves}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Salary Approvals</span>
+                      <span className="font-medium text-blue-600">{data.salaryApprovals}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         );
       
       case "executive":
         return (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="My Students" value={data.myStudents} icon={GraduationCap} />
-            <StatCard title="Fees Collected" value={`₹${data.feesCollected.toLocaleString()}`} icon={DollarSign} />
-            <StatCard title="Pending Fees" value={data.pendingFees} icon={AlertCircle} />
-            <StatCard title="Today's Attendance" value={data.todayAttendance} icon={Calendar} />
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="My Students" value={data.myStudents} icon={GraduationCap} />
+              <StatCard title="Fees Collected" value={`₹${data.feesCollected.toLocaleString()}`} icon={DollarSign} />
+              <StatCard title="Pending Fees" value={data.pendingFees} icon={AlertCircle} />
+              <StatCard title="Today's Attendance" value={data.todayAttendance} icon={Calendar} />
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full" variant="outline" onClick={() => window.location.href = '/tasks'}>
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  View Tasks
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Calendar Widget */}
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-6">
+              <DashboardCalendar userId={user.id || 'EXE001'} userRole={role} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Executive Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">My Students</span>
+                      <span className="font-medium">{data.myStudents}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Fees Collected</span>
+                      <span className="font-medium text-green-600">₹{data.feesCollected.toLocaleString()}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Pending Fees</span>
+                      <span className="font-medium text-orange-600">{data.pendingFees}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         );
       
       case "tutor":
         return (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="My Students" value={data.myStudents} icon={GraduationCap} />
-            <StatCard title="My Assignments" value={data.myAssignments} icon={BookOpen} />
-            <StatCard title="Pending Grading" value={data.pendingGrading} icon={AlertCircle} />
-            <StatCard title="Today's Classes" value={data.todayClasses} icon={Calendar} />
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="My Students" value={data.myStudents} icon={GraduationCap} />
+              <StatCard title="My Assignments" value={data.myAssignments} icon={BookOpen} />
+              <StatCard title="Pending Grading" value={data.pendingGrading} icon={AlertCircle} />
+              <StatCard title="Today's Classes" value={data.todayClasses} icon={Calendar} />
+            </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button className="w-full" variant="outline" onClick={() => window.location.href = '/tasks'}>
+                  <CheckSquare className="h-4 w-4 mr-2" />
+                  View My Tasks
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Calendar Widget */}
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-6">
+              <DashboardCalendar userId={user.id || 'TUT001'} userRole={role} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Tutor Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">My Students</span>
+                      <span className="font-medium">{data.myStudents}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">My Assignments</span>
+                      <span className="font-medium">{data.myAssignments}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Pending Grading</span>
+                      <span className="font-medium text-orange-600">{data.pendingGrading}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         );
       
       case "student":
         return (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <StatCard title="My Assignments" value={data.myAssignments} icon={BookOpen} />
-            <StatCard title="Pending Submissions" value={data.pendingSubmissions} icon={AlertCircle} />
-            <StatCard title="Attendance Rate" value={`${data.attendanceRate}%`} icon={Calendar} />
-            <StatCard title="Fee Balance" value={`₹${data.feeBalance.toLocaleString()}`} icon={DollarSign} />
-          </div>
+          <>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <StatCard title="My Assignments" value={data.myAssignments} icon={BookOpen} />
+              <StatCard title="Pending Submissions" value={data.pendingSubmissions} icon={AlertCircle} />
+              <StatCard title="Attendance Rate" value={`${data.attendanceRate}%`} icon={Calendar} />
+              <StatCard title="Fee Balance" value={`₹${data.feeBalance.toLocaleString()}`} icon={DollarSign} />
+            </div>
+
+            {/* Calendar Widget */}
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2 mt-6">
+              <DashboardCalendar userId={user.id || 'STU001'} userRole={role} compact />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Student Overview</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">My Assignments</span>
+                      <span className="font-medium">{data.myAssignments}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Attendance Rate</span>
+                      <span className="font-medium text-green-600">{data.attendanceRate}%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Fee Balance</span>
+                      <span className="font-medium text-orange-600">₹{data.feeBalance.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </>
         );
       
       default:
@@ -261,9 +478,20 @@ const Dashboard = () => {
             Here's what's happening in your {role} portal today.
           </p>
         </div>
-        <Badge variant="outline" className="capitalize">
-          {role} Dashboard
-        </Badge>
+        <div className="flex items-center gap-4">
+          <Badge variant="outline" className="capitalize">
+            {role} Dashboard
+          </Badge>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.location.href = '/calendar'}
+            className="hidden md:flex"
+          >
+            <CalendarIcon className="h-4 w-4 mr-2" />
+            Calendar
+          </Button>
+        </div>
       </div>
 
       {renderRoleSpecificDashboard()}
